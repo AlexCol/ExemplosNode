@@ -8,7 +8,8 @@
     "skipLibCheck": true,                                /* Skip type checking all .d.ts files. */
     "moduleResolution": "Node16",
     "outDir": "build",
-    "types": ["jest"]
+    "types": ["jest", "reflect-metadata"],
+    "experimentalDecorators": true
   },
   "exclude": ["node_modules/"],
   "include": ["src/**/*.ts", "test/**/*.ts"]

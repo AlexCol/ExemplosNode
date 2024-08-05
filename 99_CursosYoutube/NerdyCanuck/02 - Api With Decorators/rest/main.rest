@@ -1,0 +1,13 @@
+//https://www.youtube.com/watch?v=RcxvrhQKv8I
+@hostname = http://localhost:3000
+
+### Options
+OPTIONS {{hostname}}
+
+### HealthCheck
+GET {{hostname}}/healthcheck
+Content-Type:  application/json
+
+{
+  "message": "hi friend"
+}
