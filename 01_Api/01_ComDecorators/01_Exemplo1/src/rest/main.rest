@@ -1,0 +1,19 @@
+//https://www.youtube.com/watch?v=RcxvrhQKv8I
+@hostname = http://localhost:3000
+
+### Login Route
+POST {{hostname}}/auth/login
+Content-Type:  application/json
+
+{
+    "username": "Ale",
+    "password": "123"
+}
+
+### Login Route
+POST {{hostname}}/auth/protected
+Content-Type:  application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkFsZSIsImlhdCI6MTcyMjg2NzAwOCwiZXhwIjoxNzIyODcwNjA4fQ.rP7s7hxdMObv1N76O7Ycn4OZzmJEsCXdPBe7bJivZLQ
+
+### Public Route
+GET {{hostname}}/auth/public
