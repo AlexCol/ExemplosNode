@@ -34,7 +34,7 @@ npm init -y
 npx tsc --init
 npm i --save-dev @types/node
 
-"dev": "nodemon --exec ts-node-dev --files --transpile-only --quiet src/index.ts"
+"dev": "nodemon --exec ts-node-dev --files --transpile-only --quiet src/index.ts" (se npm install --save-dev nodemon ou npm install -g nodemon)
     ou
 "dev": "ts-node-dev --transpile-only --quiet src/index.ts"
 
@@ -47,6 +47,5 @@ npm i --save-dev @types/node
 
 ou (se quiser usar nodemon)
 "dev": "nodemon --exec ts-node-dev --files --transpile-only --quiet src/index.ts"
-
 
 "dev": "ts-node-dev --respawn --transpile-only --quiet src/index.ts"

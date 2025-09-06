@@ -21,6 +21,14 @@ function addEvents(io: SocketIOServer) {
   //quando alguém conectar
   io.on("connection", (socket) => {
     console.log("New client connected");
+    //numeros de clientes conectados
+    console.log(`Total clients connected: ${io.engine.clientsCount}`);
+
+    // evento de disconnect vem do socket
+    socket.on("disconnect", () => {
+      console.log("Client disconnected");
+      console.log(`Total clients connected: ${io.engine.clientsCount}`);
+    });
   });
 }
 

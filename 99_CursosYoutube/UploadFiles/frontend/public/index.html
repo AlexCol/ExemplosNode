@@ -12,7 +12,7 @@
   <div class="row">
     <div class="col-md-4">
       <h3>Uploading files using BusBoy</h3>
-      <form method="post" enctype="multipart/form-data">
+      <form id="upload-form" method="post" enctype="multipart/form-data">
         <div class="form-group">
           <label for="file">Files</label>
           <input 
@@ -28,7 +28,7 @@
         </div>
         <div class="form-group">
           <input type="submit" class="btn btn-success" value="Send">
-          <input type="reset" class="btn btn-danger" value="Clear">
+          <input type="reset" class="btn btn-danger" value="Clear" onclick="clearMsg()">
         </div>
       </form>
     </div>

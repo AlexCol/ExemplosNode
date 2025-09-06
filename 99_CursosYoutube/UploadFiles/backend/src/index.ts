@@ -2,6 +2,7 @@ import express from "express";
 import http from "http";
 import router from "./rotas";
 import addSocket from "./socket";
+import { logger } from "./util";
 
 async function main() {
   const app = express();
@@ -14,7 +15,7 @@ async function main() {
   app.use(router);
 
   // inicia o servidor http
-  server.listen(3000, () => console.log("Server running at http://localhost:3000"));
+  server.listen(3000, () => logger.info("Server running at http://localhost:3000"));
 }
 
 main();
