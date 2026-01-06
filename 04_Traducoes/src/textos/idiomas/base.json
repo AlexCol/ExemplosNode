@@ -1,7 +1,8 @@
 {
   "test": {
     "HELLO": "***",
-    "Chave Super Composta": "***"
+    "Chave Super Composta": "***",
+    "HELLO_USER": "***"
   },
   "auth": {
     "LOGIN_SUCCESS": "***",

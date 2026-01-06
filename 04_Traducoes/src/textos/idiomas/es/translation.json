@@ -1,6 +1,7 @@
 {
   "test": {
-    "HELLO": "¡Hola Mundo!"
+    "HELLO": "¡Hola Mundo!",
+    "HELLO_USER": "¡Hola, {{name}}!"
   },
   "auth": {
     "LOGIN_SUCCESS": "Inicio de sesión exitoso",

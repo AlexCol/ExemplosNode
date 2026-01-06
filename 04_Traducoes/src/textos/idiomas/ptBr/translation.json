@@ -1,6 +1,7 @@
 {
   "test": {
     "HELLO": "Olá Mundo!",
+    "HELLO_USER": "Olá, {name} e de novo {name}!",
     "Chave Super Composta": "Este é um valor de chave super compostaaaa"
   },
   "auth": {
