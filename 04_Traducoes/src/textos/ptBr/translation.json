@@ -1,0 +1,43 @@
+{
+  "test": {
+    "HELLO": "Olá Mundo!",
+    "Chave Super Composta": "Este é um valor de chave super compostaaaa"
+  },
+  "auth": {
+    "LOGIN_SUCCESS": "Login realizado com sucesso",
+    "LOGIN_FAILED": "Falha no login - PtBr",
+    "INVALID_CREDENTIALS": "Credenciais inválidas",
+    "TOKEN_EXPIRED": "Token expirado",
+    "UNAUTHORIZED": "Acesso não autorizado"
+  },
+  "users": {
+    "CREATED": "Usuário criado com sucesso",
+    "UPDATED": "Usuário atualizado com sucesso",
+    "DELETED": "Usuário excluído com sucesso",
+    "NOT_FOUND": "Usuário não encontrado",
+    "EMAIL_EXISTS": "Email já existe",
+    "INVALID_EMAIL": "Formato de email inválido"
+  },
+  "products": {
+    "CREATED": "Produto criado com sucesso",
+    "UPDATED": "Produto atualizado com sucesso",
+    "DELETED": "Produto excluído com sucesso",
+    "NOT_FOUND": "Produto não encontrado",
+    "OUT_OF_STOCK": "Produto em falta",
+    "INVALID_PRICE": "Formato de preço inválido"
+  },
+  "validation": {
+    "REQUIRED": "Este campo é obrigatório",
+    "MIN_LENGTH": "O comprimento mínimo é {{min}} caracteres",
+    "MAX_LENGTH": "O comprimento máximo é {{max}} caracteres",
+    "INVALID_FORMAT": "Formato inválido",
+    "NUMERIC_ONLY": "Apenas valores numéricos são permitidos"
+  },
+  "common": {
+    "SUCCESS": "Operação realizada com sucesso",
+    "ERROR": "Ocorreu um erro",
+    "NOT_FOUND": "Recurso não encontrado",
+    "FORBIDDEN": "Acesso proibido",
+    "BAD_REQUEST": "Solicitação inválida"
+  }
+}

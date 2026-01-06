@@ -1,0 +1,42 @@
+{
+  "test": {
+    "HELLO": "¡Hola Mundo!"
+  },
+  "auth": {
+    "LOGIN_SUCCESS": "Inicio de sesión exitoso",
+    "LOGIN_FAILED": "Error en el inicio de sesión",
+    "INVALID_CREDENTIALS": "Credenciales inválidas",
+    "TOKEN_EXPIRED": "El token ha expirado",
+    "UNAUTHORIZED": "Acceso no autorizado"
+  },
+  "users": {
+    "CREATED": "Usuario creado exitosamente",
+    "UPDATED": "Usuario actualizado exitosamente",
+    "DELETED": "Usuario eliminado exitosamente",
+    "NOT_FOUND": "Usuario no encontrado",
+    "EMAIL_EXISTS": "El email ya existe",
+    "INVALID_EMAIL": "Formato de email inválido"
+  },
+  "products": {
+    "CREATED": "Producto creado exitosamente",
+    "UPDATED": "Producto actualizado exitosamente",
+    "DELETED": "Producto eliminado exitosamente",
+    "NOT_FOUND": "Producto no encontrado",
+    "OUT_OF_STOCK": "Producto agotado",
+    "INVALID_PRICE": "Formato de precio inválido"
+  },
+  "validation": {
+    "REQUIRED": "Este campo es obligatorio",
+    "MIN_LENGTH": "La longitud mínima es {{min}} caracteres",
+    "MAX_LENGTH": "La longitud máxima es {{max}} caracteres",
+    "INVALID_FORMAT": "Formato inválido",
+    "NUMERIC_ONLY": "Solo se permiten valores numéricos"
+  },
+  "common": {
+    "SUCCESS": "Operación completada exitosamente",
+    "ERROR": "Ocurrió un error",
+    "NOT_FOUND": "Recurso no encontrado",
+    "FORBIDDEN": "Acceso prohibido",
+    "BAD_REQUEST": "Solicitud incorrecta"
+  }
+}
