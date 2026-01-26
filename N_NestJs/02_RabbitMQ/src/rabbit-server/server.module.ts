@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ServerService } from './server.service';
+import { createQueueOptions, RABBITMQ_QUEUES } from '../rabbit-constants';
 
 @Module({
   imports: [
@@ -8,13 +9,7 @@ import { ServerService } from './server.service';
       {
         name: 'NOTIFICATION_SERVICE',
         transport: Transport.RMQ,
-        options: {
-          urls: ['amqp://localhost:5672'],
-          queue: 'cats_queue',
-          queueOptions: {
-            durable: false,
-          },
-        },
+        options: createQueueOptions(RABBITMQ_QUEUES.PROCESSING), // 🎯 Queue específica
       },
     ]),
   ],

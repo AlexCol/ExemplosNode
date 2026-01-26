@@ -45,9 +45,9 @@ export class Consumer1Controller {
         chainStep: 1,
       };
 
-      // 🎯 Emite evento para Consumer2
+      // 🎯 Emite evento para Consumer2 na queue NOTIFICATIONS
       this.client.emit('cats.chain.step2', processedData);
-      this.logger.log(`⚡ Consumer1 enviou dados processados para Consumer2`);
+      this.logger.log(`⚡ Consumer1 enviou dados processados para Consumer2 (NOTIFICATIONS queue)`);
     } catch (error) {
       this.logger.error(`❌ Erro no processamento encadeado: ${error.message}`);
       throw error;
