@@ -25,19 +25,19 @@ export class MonetarioVO {
   /* Operações matemáticas                                    */
   /************************************************************/
 
-  somar(outro: MonetarioVO): MonetarioVO {
+  add(outro: MonetarioVO): MonetarioVO {
     return new MonetarioVO(this.valor.plus(outro.valor));
   }
 
-  subtrair(outro: MonetarioVO): MonetarioVO {
+  subtract(outro: MonetarioVO): MonetarioVO {
     return new MonetarioVO(this.valor.minus(outro.valor));
   }
 
-  multiplicar(fator: number | string | Decimal): MonetarioVO {
+  multiply(fator: number | string | Decimal): MonetarioVO {
     return new MonetarioVO(this.valor.times(fator));
   }
 
-  dividir(divisor: number | string | Decimal): MonetarioVO {
+  divide(divisor: number | string | Decimal): MonetarioVO {
     if (new Decimal(divisor).isZero()) {
       throw new Error('Divisão por zero.');
     }
@@ -48,7 +48,7 @@ export class MonetarioVO {
   /* Retorna um novo MonetarioVO com escala definida.         */
   /* Útil para fronteiras: persistência, exibição, cobrança.  */
   /************************************************************/
-  comEscala(
+  withScale(
     casas: number,
     rounding: Decimal.Rounding = Decimal.ROUND_HALF_UP,
   ): MonetarioVO {
@@ -58,7 +58,7 @@ export class MonetarioVO {
   /************************************************************/
   /* Uso apenas para exibição.                                */
   /************************************************************/
-  formatar(
+  print(
     casas = 2,
     decimalSeparator: '.' | ',' = '.',
     rounding: Decimal.Rounding = Decimal.ROUND_HALF_UP,
@@ -91,11 +91,11 @@ export class MonetarioVO {
     return this.valor.equals(outro.valor);
   }
 
-  maiorQue(outro: MonetarioVO): boolean {
+  greaterThan(outro: MonetarioVO): boolean {
     return this.valor.greaterThan(outro.valor);
   }
 
-  menorQue(outro: MonetarioVO): boolean {
+  lessThan(outro: MonetarioVO): boolean {
     return this.valor.lessThan(outro.valor);
   }
 }
