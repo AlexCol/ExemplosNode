@@ -1,5 +1,5 @@
-import { BaseVO } from "./_BaseVO";
-import InvalidValueObjectError from "./_InvalidValueObjectError.js";
+import { BaseVO } from './_BaseVO';
+import InvalidValueObjectError from './_InvalidValueObjectError';
 
 export class NomeVO extends BaseVO {
   private readonly nome: string;
@@ -12,10 +12,7 @@ export class NomeVO extends BaseVO {
 
   validate(): void {
     if (!this.nome || this.nome.trim().length === 0) {
-      throw new InvalidValueObjectError(
-        'nome',
-        'Nome não pode ser vazio.'
-      );
+      throw new InvalidValueObjectError('nome', 'Nome não pode ser vazio.');
     }
   }
 

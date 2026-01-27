@@ -1,5 +1,5 @@
-import { BaseVO } from "./_BaseVO";
-import InvalidValueObjectError from "./_InvalidValueObjectError.js";
+import { BaseVO } from './_BaseVO';
+import InvalidValueObjectError from './_InvalidValueObjectError';
 
 export class EmailVO extends BaseVO {
   private readonly email: string;
@@ -14,10 +14,7 @@ export class EmailVO extends BaseVO {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!this.email || !emailRegex.test(this.email)) {
-      throw new InvalidValueObjectError(
-        'email',
-        'Email inválido.',
-      );
+      throw new InvalidValueObjectError('email', 'Email inválido.');
     }
   }
 

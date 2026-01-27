@@ -1,5 +1,5 @@
-import { BaseVO } from "./_BaseVO";
-import InvalidValueObjectError from "./_InvalidValueObjectError.js";
+import { BaseVO } from './_BaseVO';
+import InvalidValueObjectError from './_InvalidValueObjectError';
 
 export class IdadeVO extends BaseVO {
   private readonly idade: number;
@@ -13,7 +13,7 @@ export class IdadeVO extends BaseVO {
     if (!Number.isInteger(this.idade) || this.idade < 0 || this.idade > 120) {
       throw new InvalidValueObjectError(
         'idade',
-        'Idade inválida. Deve ser um número inteiro entre 0 e 120.'
+        'Idade inválida. Deve ser um número inteiro entre 0 e 120.',
       );
     }
   }
