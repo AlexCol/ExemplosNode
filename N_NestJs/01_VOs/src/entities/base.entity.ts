@@ -18,59 +18,43 @@ export class BaseEntity {
     return result;
   }
 
-  static fromJson(
+  protected static fromJson(
     json: Record<string, unknown>,
-    voMappings?: Record<string, new (value: unknown) => unknown>,
+    voMappings: Record<string, new (value: unknown) => unknown>,
   ): BaseEntity {
     const processedData: Record<string, unknown> = {};
+    const baseProps = Object.getOwnPropertyNames(new this());
 
     // 1. Primeiro, aplica mapeamentos explícitos se fornecidos
-    if (voMappings) {
-      Object.entries(voMappings).forEach(([prop, VOClass]) => {
-        if (json[prop] !== undefined) {
-          processedData[prop] = new VOClass(json[prop]);
-        }
-      });
-    }
+    Object.entries(voMappings).forEach(([prop, VOClass]) => {
+      // Ignora campos extras
+      if (!baseProps.includes(prop)) return;
 
-    // 2. Depois, tenta auto-detectar VOs por convenção
+      if (json[prop] !== undefined) {
+        processedData[prop] = new VOClass(json[prop]);
+      }
+    });
+
+    // 2. Depois, carrega as demais propriedades diretamente
     Object.entries(json).forEach(([prop, value]) => {
+      // Ignora campos extras
+      if (!baseProps.includes(prop)) return;
+
       // Pula se já foi processado no mapeamento explícito
       if (processedData.hasOwnProperty(prop)) {
         return;
       }
 
-      // Convenções para auto-detecção de VOs:
-      const autoVOMappings = this.getAutoVOMappings();
-
-      if (autoVOMappings[prop] && value !== null && value !== undefined) {
-        processedData[prop] = new autoVOMappings[prop](value);
-      } else {
-        processedData[prop] = value;
-      }
+      processedData[prop] = value;
     });
 
     // 3. Tenta criar uma nova instância usando o construtor
     try {
-      // Para classes com construtor padrão, passa os dados como parâmetros ordenados
       const instance = new this();
-
-      // Atribui as propriedades processadas
       Object.assign(instance, processedData);
-
       return instance;
     } catch (error) {
       throw new Error(`Erro ao criar instância a partir do JSON: ${error}`);
     }
-  }
-
-  /****************************************************************************************/
-  /* Metodo que precisa ser sobrescrito na classe filha                                   */
-  /****************************************************************************************/
-  protected static getAutoVOMappings(): Record<
-    string,
-    new (value: unknown) => unknown
-  > {
-    throw new Error('getAutoVOMappings deve ser sobrescrito na classe filha.');
   }
 }

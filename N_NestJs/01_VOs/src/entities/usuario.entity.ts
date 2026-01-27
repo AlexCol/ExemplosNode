@@ -10,7 +10,12 @@ export class Usuario extends BaseEntity {
   idade: IdadeVO;
 
   //! construtor para quando se tem os objetos já validados
-  constructor(id: number, nome: NomeVO, email: EmailVO, idade: IdadeVO) {
+  private constructor(
+    id: number,
+    nome: NomeVO,
+    email: EmailVO,
+    idade: IdadeVO,
+  ) {
     super();
     this.id = id;
     this.nome = nome;
@@ -19,14 +24,9 @@ export class Usuario extends BaseEntity {
   }
 
   //! create pra quando se deseja passar um objeto simples e deixar a entidade cuidar da criação dos VOs
-  static create(data: {
-    id: number;
-    nome: string;
-    email: string;
-    idade: number;
-  }): Usuario {
+  static create(data: CreateUsuarioDto): Usuario {
     return new Usuario(
-      data.id,
+      data.id!,
       new NomeVO(data.nome),
       new EmailVO(data.email),
       new IdadeVO(data.idade),
@@ -44,16 +44,11 @@ export class Usuario extends BaseEntity {
 
     return instance;
   }
+}
 
-  //! Mapeamentos automáticos de VOs por convenção
-  protected static getAutoVOMappings(): Record<
-    string,
-    new (value: unknown) => unknown
-  > {
-    return {
-      nome: NomeVO,
-      email: EmailVO,
-      idade: IdadeVO,
-    };
-  }
+export class CreateUsuarioDto {
+  id?: number;
+  nome: string;
+  email: string;
+  idade: number;
 }
