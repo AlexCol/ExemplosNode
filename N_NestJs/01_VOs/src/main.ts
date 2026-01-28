@@ -16,6 +16,7 @@ async function bootstrap() {
   );
 
   setupSwagger(app);
+  configCors(app);
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
@@ -58,5 +59,14 @@ function setupSwagger(app: INestApplication<any>) {
     jsonDocumentUrl: '/swagger/json',
     yamlDocumentUrl: '/swagger/yaml',
     swaggerUiEnabled: false,
+  });
+}
+
+function configCors(app: INestApplication<any>) {
+  app.enableCors({
+    origin: '*', // Permitir todas as origens (ajuste conforme necessário para produção)
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   });
 }
