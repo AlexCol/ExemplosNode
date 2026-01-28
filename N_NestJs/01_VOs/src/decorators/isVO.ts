@@ -1,20 +1,22 @@
+import {
+  registerDecorator,
+  ValidationArguments,
+  ValidationOptions,
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+} from 'class-validator';
 import { Transform, TransformFnParams } from 'class-transformer';
-import { registerDecorator, ValidationOptions, ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments } from 'class-validator';
-import InvalidValueObjectError from '../VOs/_InvalidValueObjectError.js';
+import InvalidValueObjectError from 'src/VOs/VOError/InvalidValueObjectError';
 
-// Constraint personalizado para validação de VOs
+type VOConstructor<T> = new (value: unknown) => T;
+
+//#region Constraint
 @ValidatorConstraint({ name: 'voValidator', async: false })
 export class VOValidatorConstraint implements ValidatorConstraintInterface {
+  validate(value: unknown, args: ValidationArguments): boolean {
+    const [VoClass] = args.constraints as [VOConstructor<any>];
 
-  validate(value: any, args: ValidationArguments) {
-    const [VoClass, isOptional] = args.constraints;
-
-    // Se está undefined/null, valida de acordo com isOptional
-    if (value === null || value === undefined) {
-      return isOptional;
-    }
-
-    // Se já é uma instância do VO, considerar válido
+    // Já transformado
     if (value instanceof VoClass) {
       return true;
     }
@@ -22,65 +24,63 @@ export class VOValidatorConstraint implements ValidatorConstraintInterface {
     try {
       new VoClass(value);
       return true;
-    } catch (err) {
+    } catch {
       return false;
     }
   }
 
-  defaultMessage(args: ValidationArguments) {
-    const [VoClass, isOptional] = args.constraints;
+  defaultMessage(args: ValidationArguments): string {
+    const [VoClass] = args.constraints as [VOConstructor<any>];
     const value = args.value;
 
-    // Se não é opcional e está undefined/null
-    if (!isOptional && (value === null || value === undefined)) {
+    if (value === null || value === undefined) {
       return `${args.property} é obrigatório`;
-    }
-
-    // Se já é uma instância do VO, não há erro
-    if (value instanceof VoClass) {
-      return '';
     }
 
     try {
       new VoClass(value);
     } catch (err) {
       if (err instanceof InvalidValueObjectError) {
-        return err.message;
+        return `${args.property} ${err.message}`;
       }
-      return err.message || 'Invalid value';
     }
 
-    return 'Invalid value';
+    return `${args.property} possui valor inválido`;
   }
 }
+//#endregion
 
-export function isVO<T>(VoClass: new (value: any) => T, validationOptions?: ValidationOptions) {
+//#region Decorator
+export function isVO<T>(
+  VoClass: VOConstructor<T>,
+  validationOptions?: ValidationOptions,
+) {
   return function (target: any, propertyKey: string) {
-
-    // Verificar se existe @IsOptional() usando Reflect
-    const existingMetadata = Reflect.getMetadata('custom:validation', target) || {};
-    const isOptional = existingMetadata[propertyKey]?.isOptional || false;
-
-    // Aplicar transformação
+    // Transformação: tenta converter para VO
     Transform(({ value }: TransformFnParams) => {
       if (value === null || value === undefined) {
         return value;
       }
 
+      if (value instanceof VoClass) {
+        return value;
+      }
+
       try {
         return new VoClass(value);
-      } catch (err) {
+      } catch {
         return value;
       }
     })(target, propertyKey);
 
-    // Aplicar validação com o parâmetro isOptional
+    // Validação
     registerDecorator({
       target: target.constructor,
       propertyName: propertyKey,
       options: validationOptions,
-      constraints: [VoClass, isOptional],
+      constraints: [VoClass],
       validator: VOValidatorConstraint,
     });
   };
 }
+//#endregion

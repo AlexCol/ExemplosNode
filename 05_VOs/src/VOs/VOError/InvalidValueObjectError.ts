@@ -1,9 +1,9 @@
 export default class InvalidValueObjectError extends Error {
   constructor(
-    readonly field: string,
     message: string,
+    readonly field?: string,
   ) {
     super(message);
-    this.name = 'InvalidValueObjectError';
+    this.name = "InvalidValueObjectError";
   }
 }
