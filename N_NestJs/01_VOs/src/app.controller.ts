@@ -2,14 +2,27 @@ import { Body, Controller, Post } from '@nestjs/common';
 import { ExemploDto } from './dto/exemplo.dto';
 import { EntidadeTeste } from './entities/usuario.entity';
 import { EmailVO } from './VOs/EmailVO/EmailVO';
+import { ResponseDto } from './dto/response.dto';
+import { ApiResponse } from '@nestjs/swagger';
+import { ErrorResponseDto } from './dto/error-response.dto';
 
 @Controller()
 export class AppController {
   constructor() {}
 
   @Post('teste')
-  newUser(@Body() body: ExemploDto) {
-    return body;
+  @ApiResponse({ status: 201, type: ResponseDto })
+  @ApiResponse({ status: 400, type: ErrorResponseDto })
+  newUser(@Body() body: ExemploDto): ResponseDto {
+    const newEntidade = EntidadeTeste.create(body);
+
+    const responseDto = {
+      grana: newEntidade.grana.toString(),
+      email: newEntidade.email.getValue(),
+      dataHora: newEntidade.dataHora.getValue(),
+    } satisfies ResponseDto;
+
+    return responseDto;
   }
 
   @Post('teste2')
