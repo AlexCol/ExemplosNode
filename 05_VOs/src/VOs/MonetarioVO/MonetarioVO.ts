@@ -1,10 +1,12 @@
 import Decimal from "decimal.js";
 import InvalidValueObjectError from "../VOError/InvalidValueObjectError";
+import { BaseVO } from "../BaseVO";
 
-export class MonetarioVO {
+export class MonetarioVO extends BaseVO {
   private readonly value: Decimal;
 
   constructor(valor: string | number | Decimal) {
+    super();
     let decimal: Decimal;
 
     if (valor instanceof Decimal) {
@@ -56,6 +58,11 @@ export class MonetarioVO {
   /************************************************************/
   /* Uso apenas para exibição.                                */
   /************************************************************/
+  getValue(): Decimal {
+    //decimal é 'cuspido' como string ao converter para JSON, isso é da biblioteca mesmo, não um bug
+    return this.value;
+  }
+
   print(casas = 2, decimalSeparator: "." | "," = ".", rounding: Decimal.Rounding = Decimal.ROUND_HALF_UP): string {
     let str = this.value.toDecimalPlaces(casas, rounding).toFixed(casas);
 

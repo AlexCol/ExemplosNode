@@ -14,7 +14,7 @@ type VOConstructor<T> = new (value: unknown) => T;
 @ValidatorConstraint({ name: 'voValidator', async: false })
 export class VOValidatorConstraint implements ValidatorConstraintInterface {
   validate(value: unknown, args: ValidationArguments): boolean {
-    const [VoClass] = args.constraints as [VOConstructor<any>];
+    const [VoClass] = args.constraints as [VOConstructor<unknown>];
 
     // Já transformado
     if (value instanceof VoClass) {
@@ -30,7 +30,7 @@ export class VOValidatorConstraint implements ValidatorConstraintInterface {
   }
 
   defaultMessage(args: ValidationArguments): string {
-    const [VoClass] = args.constraints as [VOConstructor<any>];
+    const [VoClass] = args.constraints as [VOConstructor<unknown>];
     const value = args.value;
 
     if (value === null || value === undefined) {
@@ -55,7 +55,7 @@ export function isVO<T>(
   VoClass: VOConstructor<T>,
   validationOptions?: ValidationOptions,
 ) {
-  return function (target: any, propertyKey: string) {
+  return function (target: object, propertyKey: string) {
     // Transformação: tenta converter para VO
     Transform(({ value }: TransformFnParams) => {
       if (value === null || value === undefined) {

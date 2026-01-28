@@ -1,14 +1,16 @@
-import { DateTime } from "luxon";
-import InvalidValueObjectError from "../VOError/InvalidValueObjectError";
+import { DateTime } from 'luxon';
+import InvalidValueObjectError from '../VOError/InvalidValueObjectError';
+import { BaseVO } from '../BaseVO';
 
 //Lista com timezones
 //https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 
-export class DataHoraVO {
+export class DataHoraVO extends BaseVO {
   private readonly value: DateTime;
 
   constructor(date: string | Date | DateTime) {
-    const effectiveZone = "UTC";
+    super();
+    const effectiveZone = 'UTC';
 
     if (date instanceof Date) {
       this.value = DateTime.fromJSDate(date, { zone: effectiveZone }).toUTC();
@@ -19,13 +21,17 @@ export class DataHoraVO {
     }
 
     if (!this.value.isValid) {
-      throw new InvalidValueObjectError("Data/hora inválida.");
+      throw new InvalidValueObjectError('Data/hora inválida.');
     }
   }
 
   /************************************************************/
   /* Exibição                                                 */
   /************************************************************/
+  getValue(zone?: string) {
+    return zone ? this.value.setZone(zone).toISO()! : this.value.toISO()!;
+  }
+
   toString(zone?: string): string {
     return zone ? this.value.setZone(zone).toISO()! : this.value.toISO()!;
   }
@@ -79,7 +85,7 @@ export class DataHoraVO {
   }
 
   daysBetween(other: DataHoraVO): number {
-    return Math.abs(this.value.diff(other.value, "days").days);
+    return Math.abs(this.value.diff(other.value, 'days').days);
   }
 
   isBefore(other: DataHoraVO): boolean {
@@ -98,11 +104,19 @@ export class DataHoraVO {
   /* Metodos Privados                                         */
   /************************************************************/
   private convertFromString(dateStr: string, zone: string): DateTime {
+    //se vier em formato UTC com 'Z' no final, remove o 'Z'
+    if (dateStr.endsWith('Z')) {
+      dateStr = dateStr.slice(0, -1);
+    }
+
     // Aceita ISO: yyyy-MM-dd ou yyyy-MM-ddTHH:mm[:ss]
-    const isoDateTime = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?$/;
+    const isoDateTime =
+      /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?)?$/;
 
     if (!isoDateTime.test(dateStr)) {
-      throw new InvalidValueObjectError("Formato de data/hora inválido. Use yyyy-MM-dd ou yyyy-MM-ddTHH:mm[:ss]");
+      throw new InvalidValueObjectError(
+        'Data/hora em formato inválido. Use ISO 8601.',
+      );
     }
 
     return DateTime.fromISO(dateStr, { zone }).toUTC();

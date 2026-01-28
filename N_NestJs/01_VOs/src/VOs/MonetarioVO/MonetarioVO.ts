@@ -1,22 +1,24 @@
-import Decimal from "decimal.js";
-import InvalidValueObjectError from "../VOError/InvalidValueObjectError";
+import Decimal from 'decimal.js';
+import InvalidValueObjectError from '../VOError/InvalidValueObjectError';
+import { BaseVO } from '../BaseVO';
 
-export class MonetarioVO {
+export class MonetarioVO extends BaseVO {
   private readonly value: Decimal;
 
   constructor(valor: string | number | Decimal) {
+    super();
     let decimal: Decimal;
 
     if (valor instanceof Decimal) {
       decimal = valor;
-    } else if (typeof valor === "number") {
+    } else if (typeof valor === 'number') {
       decimal = new Decimal(valor);
     } else {
       decimal = this.parseString(valor);
     }
 
     if (!MonetarioVO.validarValor(decimal)) {
-      throw new InvalidValueObjectError("Valor monetário inválido.");
+      throw new InvalidValueObjectError('Valor monetário inválido.');
     }
 
     this.value = decimal;
@@ -40,7 +42,7 @@ export class MonetarioVO {
 
   divide(divisor: number | string | Decimal): MonetarioVO {
     if (new Decimal(divisor).isZero()) {
-      throw new InvalidValueObjectError("Divisão por zero.");
+      throw new InvalidValueObjectError('Divisão por zero.');
     }
     return new MonetarioVO(this.value.dividedBy(divisor));
   }
@@ -49,26 +51,42 @@ export class MonetarioVO {
   /* Retorna um novo MonetarioVO com escala definida.         */
   /* Útil para fronteiras: persistência, exibição, cobrança.  */
   /************************************************************/
-  withScale(casas: number, rounding: Decimal.Rounding = Decimal.ROUND_HALF_UP): MonetarioVO {
+  withScale(
+    casas: number,
+    rounding: Decimal.Rounding = Decimal.ROUND_HALF_UP,
+  ): MonetarioVO {
     return new MonetarioVO(this.value.toDecimalPlaces(casas, rounding));
   }
 
   /************************************************************/
   /* Uso apenas para exibição.                                */
   /************************************************************/
-  print(casas = 2, decimalSeparator: "." | "," = ".", rounding: Decimal.Rounding = Decimal.ROUND_HALF_UP): string {
+  getValue(): Decimal {
+    //decimal é 'cuspido' como string ao converter para JSON, isso é da biblioteca mesmo, não um bug
+    return this.value;
+  }
+
+  print(
+    casas = 2,
+    decimalSeparator: '.' | ',' = '.',
+    rounding: Decimal.Rounding = Decimal.ROUND_HALF_UP,
+  ): string {
     let str = this.value.toDecimalPlaces(casas, rounding).toFixed(casas);
 
-    if (decimalSeparator === ",") {
-      str = str.replace(".", ",");
+    if (decimalSeparator === ',') {
+      str = str.replace('.', ',');
     }
 
     return str;
   }
 
-  printCurrency(locale: string, currency: string, options?: Intl.NumberFormatOptions): string {
+  printCurrency(
+    locale: string,
+    currency: string,
+    options?: Intl.NumberFormatOptions,
+  ): string {
     return new Intl.NumberFormat(locale, {
-      style: "currency",
+      style: 'currency',
       currency,
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
