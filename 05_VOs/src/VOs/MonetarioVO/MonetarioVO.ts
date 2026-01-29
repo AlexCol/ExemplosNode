@@ -5,15 +5,8 @@ import { BaseVO } from "../BaseVO";
 export class MonetarioVO extends BaseVO {
   private readonly value: Decimal;
 
-  private constructor(valor: Decimal) {
+  constructor(valor: string | number | Decimal) {
     super();
-    this.value = valor;
-  }
-
-  /************************************************************/
-  /* Metodo Factory                                           */
-  /************************************************************/
-  static create(valor: string | number | Decimal): MonetarioVO {
     let decimal: Decimal;
 
     if (valor instanceof Decimal) {
@@ -21,14 +14,14 @@ export class MonetarioVO extends BaseVO {
     } else if (typeof valor === "number") {
       decimal = new Decimal(valor);
     } else {
-      decimal = MonetarioVO.parseString(valor);
+      decimal = this.parseString(valor);
     }
 
     if (!MonetarioVO.validarValor(decimal)) {
       throw new InvalidValueObjectError("Valor monetário inválido.");
     }
 
-    return new MonetarioVO(decimal);
+    this.value = decimal;
   }
 
   /************************************************************/
@@ -124,7 +117,7 @@ export class MonetarioVO extends BaseVO {
     return valor.isFinite() && !valor.isNaN();
   }
 
-  private static parseString(valor: string): Decimal {
+  private parseString(valor: string): Decimal {
     const normalized = valor.trim();
 
     //formato canônico: apenas dígitos, opcionalmente com ponto decimal
