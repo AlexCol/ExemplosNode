@@ -1,26 +1,32 @@
-import { BaseVO } from '../BaseVO';
-import InvalidValueObjectError from '../VOError/InvalidValueObjectError';
+import { BaseVO } from "../BaseVO";
+import InvalidValueObjectError from "../VOError/InvalidValueObjectError";
 
 export class EmailVO extends BaseVO {
   private readonly value: string;
 
-  constructor(email: string) {
+  private constructor(email: string) {
     super();
-    if (typeof email !== 'string') {
-      throw new InvalidValueObjectError('Email inválido.');
+    this.value = email;
+  }
+
+  /************************************************************/
+  /* Metodo Factory                                           */
+  /************************************************************/
+  static create(email: string): EmailVO {
+    if (typeof email !== "string") {
+      throw new InvalidValueObjectError("Email inválido.");
     }
 
     const normalized = email.trim().toLowerCase();
 
     if (!EmailVO.isValid(normalized)) {
-      throw new InvalidValueObjectError('Email inválido.');
+      throw new InvalidValueObjectError("Email inválido.");
     }
-
-    this.value = normalized;
+    return new EmailVO(normalized);
   }
 
   /************************************************************/
-  /* Exibição / Integração                                   */
+  /* Exibição / Integração                                    */
   /************************************************************/
   toString(): string {
     return this.value;
@@ -41,8 +47,7 @@ export class EmailVO extends BaseVO {
   /* Validação                                                */
   /************************************************************/
   private static isValid(email: string): boolean {
-    const emailRegex =
-      /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
     return emailRegex.test(email);
   }
   // exemplos que esse regex permite

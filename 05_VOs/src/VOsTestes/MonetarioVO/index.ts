@@ -3,9 +3,9 @@ import { MonetarioVO } from "../../VOs/MonetarioVO/MonetarioVO";
 export function TestaMonetarioVO() {
   console.log("===== TestaMonetarioVO =====");
 
-  const v1 = new MonetarioVO("10.50");
-  const v2 = new MonetarioVO("2.255"); // formato canônico
-  const v3 = new MonetarioVO(3);
+  const v1 = MonetarioVO.create("10.50");
+  const v2 = MonetarioVO.create("2.255"); // formato canônico
+  const v3 = MonetarioVO.create(3);
 
   console.log("v1:", v1.toString());
   console.log("v2:", v2.toString());
@@ -29,14 +29,14 @@ export function TestaMonetarioVO() {
   console.log("Comparações:");
   console.log("v1 > v2?", v1.greaterThan(v2));
   console.log("v1 < v2?", v1.lessThan(v2));
-  console.log("v1 == 10.50?", v1.equals(new MonetarioVO("10.50")));
+  console.log("v1 == 10.50?", v1.equals(MonetarioVO.create("10.50")));
 
   // Casos inválidos (string)
   const invalidos = ["2,25", "1.000,00", "1,000.00", "abc", ""];
 
   for (const valor of invalidos) {
     try {
-      new MonetarioVO(valor as any);
+      MonetarioVO.create(valor as any);
       console.error("❌ Não deveria aceitar:", valor);
     } catch {
       console.log("✔️ Rejeitado corretamente:", JSON.stringify(valor));
@@ -48,7 +48,7 @@ export function TestaMonetarioVO() {
 
   for (const valor of invalidNumbers) {
     try {
-      new MonetarioVO(valor as any);
+      MonetarioVO.create(valor as any);
       console.error("❌ Não deveria aceitar:", valor);
     } catch {
       console.log("✔️ Rejeitado corretamente:", String(valor));
