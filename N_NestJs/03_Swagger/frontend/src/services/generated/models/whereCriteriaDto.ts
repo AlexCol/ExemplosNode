@@ -8,7 +8,7 @@
  */
 
 export interface WhereCriteriaDto {
-  /** Campo para aplicar a condição. Deve ser um dos campos da resposta. */
+  /** Campo para aplicar a condição. Deve ser um dos campos da entidade retornada. */
   field: string;
   /** Valor para comparar o campo. */
   value: string;
@@ -16,6 +16,6 @@ export interface WhereCriteriaDto {
   isNegated?: boolean;
   /** Indica se a comparação deve usar o operador LIKE. Se verdadeiro, a comparação usará o operador LIKE. */
   isLike?: boolean;
-  /** Operador a ser usado para comparação. Valores válidos: "=", "!=", ">", "<", ">=", "<=", "<>" */
+  /** Operador a ser usado para comparação. Valores válidos: "=", "!=", ">", "<", ">=", "<=", "<>". Se não enviado, considera "=" como padrão. */
   operator?: string;
 }

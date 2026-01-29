@@ -11,6 +11,7 @@ import type { AxiosInstance } from "axios";
 
 import type {
   ResponseDto,
+  SearchControllerSearchPaginated200,
   SearchControllerSearchQueryParams,
   SearchCriteriaDto,
 } from ".././models";
@@ -18,6 +19,9 @@ import type {
 import { apiClient } from "../../api-mutator";
 
 export const getSearch = (axiosInstance: AxiosInstance = axios) => {
+  /**
+   * @summary Busca com critérios via body
+   */
   const searchControllerSearchBody = (searchCriteriaDto: SearchCriteriaDto) => {
     return apiClient<ResponseDto[]>({
       url: `/search-body`,
@@ -26,6 +30,9 @@ export const getSearch = (axiosInstance: AxiosInstance = axios) => {
       data: searchCriteriaDto,
     });
   };
+  /**
+   * @summary Busca com critérios via query parameters
+   */
   const searchControllerSearchQuery = (
     params?: SearchControllerSearchQueryParams,
   ) => {
@@ -35,7 +42,20 @@ export const getSearch = (axiosInstance: AxiosInstance = axios) => {
       params,
     });
   };
-  return { searchControllerSearchBody, searchControllerSearchQuery };
+  /**
+   * @summary Busca paginada com critérios via query parameters
+   */
+  const searchControllerSearchPaginated = () => {
+    return apiClient<SearchControllerSearchPaginated200>({
+      url: `/search-paginated`,
+      method: "GET",
+    });
+  };
+  return {
+    searchControllerSearchBody,
+    searchControllerSearchQuery,
+    searchControllerSearchPaginated,
+  };
 };
 export type SearchControllerSearchBodyResult = NonNullable<
   Awaited<
@@ -45,5 +65,10 @@ export type SearchControllerSearchBodyResult = NonNullable<
 export type SearchControllerSearchQueryResult = NonNullable<
   Awaited<
     ReturnType<ReturnType<typeof getSearch>["searchControllerSearchQuery"]>
+  >
+>;
+export type SearchControllerSearchPaginatedResult = NonNullable<
+  Awaited<
+    ReturnType<ReturnType<typeof getSearch>["searchControllerSearchPaginated"]>
   >
 >;

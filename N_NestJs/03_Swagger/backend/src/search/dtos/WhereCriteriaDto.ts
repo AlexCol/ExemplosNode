@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean, IsDefined, IsOptional, IsString } from 'class-validator';
 
 export class WhereCriteriaDto {
-  @ApiProperty({ description: 'Campo para aplicar a condição. Deve ser um dos campos da resposta.' })
+  @ApiProperty({ description: 'Campo para aplicar a condição. Deve ser um dos campos da entidade retornada.' })
   @IsString()
   field!: string;
 
@@ -30,7 +30,8 @@ export class WhereCriteriaDto {
   isLike?: boolean;
 
   @ApiProperty({
-    description: 'Operador a ser usado para comparação. Valores válidos: "=", "!=", ">", "<", ">=", "<=", "<>"',
+    description:
+      'Operador a ser usado para comparação. Valores válidos: "=", "!=", ">", "<", ">=", "<=", "<>". Se não enviado, considera "=" como padrão.',
     required: false,
   })
   @IsOptional()

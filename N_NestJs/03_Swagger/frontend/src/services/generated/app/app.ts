@@ -14,6 +14,9 @@ import type { ExemploDto, ResponseDto, TesteTwoDto } from ".././models";
 import { apiClient } from "../../api-mutator";
 
 export const getApp = (axiosInstance: AxiosInstance = axios) => {
+  /**
+   * @summary Teste de criação e serialização de EntidadeTeste
+   */
   const appControllerTesteOne = (exemploDto: ExemploDto) => {
     return apiClient<ResponseDto>({
       url: `/teste`,
@@ -22,6 +25,9 @@ export const getApp = (axiosInstance: AxiosInstance = axios) => {
       data: exemploDto,
     });
   };
+  /**
+   * @summary Teste de criação, serialização e desserialização de EntidadeTeste
+   */
   const appControllerTesteTwo = (exemploDto: ExemploDto) => {
     return apiClient<TesteTwoDto>({
       url: `/teste2`,

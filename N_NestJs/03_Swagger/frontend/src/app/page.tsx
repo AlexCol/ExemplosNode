@@ -7,7 +7,8 @@ import { useEffect, useState } from "react";
 
 export default function Home() {
   const [data, setData] = useState<ResponseDto | null>(null);
-  const [searchCriteriaData, setSearchCriteriaData] = useState<ResponseDto[] | null>(null);
+  const [searchCriteriaDataBody, setSearchCriteriaDataBody] = useState<ResponseDto[] | null>(null);
+  const [searchCriteriaDataQuery, setSearchCriteriaDataQuery] = useState<ResponseDto[] | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -21,12 +22,19 @@ export default function Home() {
       const data2 = await getSearch().searchControllerSearchBody({
         pagination: { page: 1, limit: 10 },
         where: [
-          { field: "grana", value: "100" },
+          { field: "grana", value: "10a0" },
           { field: "email", value: "email@busca", isLike: true },
         ],
         sort: [{ field: "email", order: "desc" }],
       });
-      setSearchCriteriaData(data2);
+      setSearchCriteriaDataBody(data2);
+
+      const data3 = await getSearch().searchControllerSearchQuery({
+        dataHora: "5",
+      });
+      setSearchCriteriaDataQuery(data3);
+
+      const data4 = await getSearch().searchControllerSearchPaginated();
     };
 
     fetchData();
@@ -43,10 +51,17 @@ export default function Home() {
         </div>
       )}
 
-      {searchCriteriaData && (
+      {searchCriteriaDataBody && (
         <div>
           <h2>Search Criteria Response Data:</h2>
-          <pre>{JSON.stringify(searchCriteriaData, null, 2)}</pre>
+          <pre>{JSON.stringify(searchCriteriaDataBody, null, 2)}</pre>
+        </div>
+      )}
+
+      {searchCriteriaDataQuery && (
+        <div>
+          <h2>Search Criteria Query Response Data:</h2>
+          <pre>{JSON.stringify(searchCriteriaDataQuery, null, 2)}</pre>
         </div>
       )}
     </div>

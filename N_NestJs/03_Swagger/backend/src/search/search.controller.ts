@@ -1,10 +1,9 @@
 import { Controller, Get, Post } from '@nestjs/common';
-import { ApiBody, ApiResponse } from '@nestjs/swagger';
-import { ErrorResponseDto } from '../dto/error-response.dto';
 import { ResponseDto } from '../dto/response.dto';
 import { EntidadeTeste } from '../entities/usuario.entity';
-import { AutoApiQuery } from './decorators/AutoApiQuery';
+import { ApiDoc } from './decorators/ApiDoc';
 import { SearchCriteriaDto } from './dtos/SearchCriteriaDto';
+import { SearchCriteriaReturnType } from './dtos/SearchCriteriaReturnType';
 import { BodySearchCriteria } from './param/body-search-criteria.param';
 import { QuerySearchCriteria } from './param/query-search-criteria.param';
 
@@ -13,9 +12,13 @@ export class SearchController {
   constructor() {}
 
   @Post('search-body')
-  @ApiBody({ type: SearchCriteriaDto })
-  @ApiResponse({ status: 200, type: ResponseDto, isArray: true })
-  @ApiResponse({ status: 400, type: ErrorResponseDto })
+  @ApiDoc({
+    summary: 'Busca com critérios via body',
+    body: SearchCriteriaDto,
+    response: ResponseDto,
+    isResponseArray: true,
+  })
+  //!EntidadeTeste usara apenas para verificar campos (não valida VO)
   searchBody(@BodySearchCriteria(EntidadeTeste) search: SearchCriteriaDto): ResponseDto[] {
     const searchResult: ResponseDto[] = [
       {
@@ -29,9 +32,13 @@ export class SearchController {
   }
 
   @Get('search-query')
-  @AutoApiQuery(ResponseDto)
-  @ApiResponse({ status: 200, type: ResponseDto, isArray: true })
-  @ApiResponse({ status: 400, type: ErrorResponseDto })
+  @ApiDoc({
+    summary: 'Busca com critérios via query parameters',
+    query: ResponseDto,
+    response: ResponseDto,
+    isResponseArray: true,
+  })
+  //!EntidadeTeste usara apenas para verificar campos (não valida VO)
   searchQuery(@QuerySearchCriteria(EntidadeTeste) search: SearchCriteriaDto): ResponseDto[] {
     const searchResult: ResponseDto[] = [
       {
@@ -41,6 +48,30 @@ export class SearchController {
         grana: search.where?.filter((w) => w.field === 'grana')[0]?.value as string,
       },
     ];
+    return searchResult;
+  }
+
+  @Get('search-paginated')
+  @ApiDoc({
+    summary: 'Busca paginada com critérios via query parameters',
+    response: ResponseDto,
+    isPaginated: true,
+  })
+  //!EntidadeTeste usara apenas para verificar campos (não valida VO)
+  searchPaginated(): SearchCriteriaReturnType<ResponseDto> {
+    const searchResult: SearchCriteriaReturnType<ResponseDto> = {
+      data: [
+        {
+          id: '1',
+          dataHora: '2024-01-01T00:00:00Z',
+          email: 'example@example.com',
+          grana: '1000',
+        },
+      ],
+      total: 1,
+      page: 1,
+      limit: 10,
+    };
     return searchResult;
   }
 }

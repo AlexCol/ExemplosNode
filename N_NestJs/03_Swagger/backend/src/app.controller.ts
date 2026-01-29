@@ -1,9 +1,9 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { ApiProperty, ApiResponse } from '@nestjs/swagger';
-import { ErrorResponseDto } from './dto/error-response.dto';
+import { ApiProperty } from '@nestjs/swagger';
 import { ExemploDto } from './dto/exemplo.dto';
 import { ResponseDto } from './dto/response.dto';
 import { EntidadeTeste } from './entities/usuario.entity';
+import { ApiDoc } from './search/decorators/ApiDoc';
 import { EmailVO } from './VOs/EmailVO/EmailVO';
 
 class testeTwoDto {
@@ -22,13 +22,16 @@ export class AppController {
   constructor() {}
 
   @Post('teste')
-  @ApiResponse({ status: 200, type: ResponseDto })
-  @ApiResponse({ status: 400, type: ErrorResponseDto })
+  @ApiDoc({
+    summary: 'Teste de criação e serialização de EntidadeTeste',
+    body: ExemploDto,
+    response: ResponseDto,
+  })
   testeOne(@Body() body: ExemploDto): ResponseDto {
     const newEntidade = EntidadeTeste.create(body);
 
     const responseDto = {
-      id: "4564981",
+      id: '4564981',
       grana: newEntidade.grana.toString(),
       email: newEntidade.email.getValue(),
       dataHora: newEntidade.dataHora.getValue(),
@@ -38,8 +41,11 @@ export class AppController {
   }
 
   @Post('teste2')
-  @ApiResponse({ status: 200, type: testeTwoDto })
-  @ApiResponse({ status: 400, type: ErrorResponseDto })
+  @ApiDoc({
+    summary: 'Teste de criação, serialização e desserialização de EntidadeTeste',
+    body: ExemploDto,
+    response: testeTwoDto,
+  })
   testeTwo(@Body() body: ExemploDto) {
     const novaEntidade = EntidadeTeste.create(body);
     const entidadeAsJson = novaEntidade.toJson();

@@ -8,7 +8,7 @@
  */
 
 export interface SortCriteriaDto {
-  /** Campo para ordenar. Deve ser um dos campos da resposta. */
+  /** Campo para ordenar. Deve ser um dos campos da entidade retornada. */
   field: string;
   /** Ordem de ordenação, ascendente ou descendente. Deve ser "asc" ou "desc". */
   order: string;

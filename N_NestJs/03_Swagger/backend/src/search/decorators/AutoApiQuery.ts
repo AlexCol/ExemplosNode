@@ -9,8 +9,8 @@ export function AutoApiQuery<T>(entity: Type<T>) {
   const extraFields = [
     { name: 'page', type: Number, required: false, description: 'Número da página.' },
     { name: 'limit', type: Number, required: false, description: 'Número de itens por página.' },
-    { name: 'order-field', type: String, required: false, description: 'Campo para ordenar' },
-    { name: 'order-direction', type: String, required: false, description: 'Direção da ordenação (asc/desc)' },
+    { name: 'orderField', type: String, required: false, description: 'Campo para ordenar' },
+    { name: 'orderDirection', type: String, required: false, description: 'Direção da ordenação (asc/desc)' },
   ];
 
   const decorators = [

@@ -35,9 +35,9 @@ export type SearchControllerSearchQueryParams = {
   /**
    * Campo para ordenar
    */
-  "order-field"?: string;
+  orderField?: string;
   /**
    * Direção da ordenação (asc/desc)
    */
-  "order-direction"?: string;
+  orderDirection?: string;
 };
