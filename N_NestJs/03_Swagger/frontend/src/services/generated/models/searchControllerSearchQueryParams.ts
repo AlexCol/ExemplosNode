@@ -9,35 +9,35 @@
 
 export type SearchControllerSearchQueryParams = {
   /**
-   * Field from entity: id
+   * Campo da entidade: id
    */
   id?: unknown;
   /**
-   * Field from entity: grana
+   * Campo da entidade: grana
    */
   grana?: unknown;
   /**
-   * Field from entity: email
+   * Campo da entidade: email
    */
   email?: unknown;
   /**
-   * Field from entity: dataHora
+   * Campo da entidade: dataHora
    */
   dataHora?: unknown;
   /**
-   * Page number
+   * Número da página.
    */
   page?: number;
   /**
-   * Items per page
+   * Número de itens por página.
    */
   limit?: number;
   /**
-   * Field to order by
+   * Campo para ordenar
    */
   "order-field"?: string;
   /**
-   * Order direction (ASC/DESC)
+   * Direção da ordenação (asc/desc)
    */
   "order-direction"?: string;
 };

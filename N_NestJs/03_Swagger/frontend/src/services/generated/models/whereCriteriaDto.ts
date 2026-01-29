@@ -8,14 +8,14 @@
  */
 
 export interface WhereCriteriaDto {
-  /** Field to apply the condition on. Must be one of the response fields. */
+  /** Campo para aplicar a condição. Deve ser um dos campos da resposta. */
   field: string;
-  /** Value to compare the field against. */
+  /** Valor para comparar o campo. */
   value: string;
-  /** Indicates if the condition is negated. Will invert the condition if true. */
+  /** Indica se a condição é negada. Inverterá a condição se verdadeiro. */
   isNegated?: boolean;
-  /** Indicates if the comparison should use LIKE operator. If true, the comparison will use the LIKE operator. */
+  /** Indica se a comparação deve usar o operador LIKE. Se verdadeiro, a comparação usará o operador LIKE. */
   isLike?: boolean;
-  /** Operator to use for comparison. */
+  /** Operador a ser usado para comparação. Valores válidos: "=", "!=", ">", "<", ">=", "<=", "<>" */
   operator?: string;
 }

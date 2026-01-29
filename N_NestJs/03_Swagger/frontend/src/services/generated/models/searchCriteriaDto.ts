@@ -11,10 +11,10 @@ import type { SortCriteriaDto } from "./sortCriteriaDto";
 import type { WhereCriteriaDto } from "./whereCriteriaDto";
 
 export interface SearchCriteriaDto {
-  /** Array of where criteria. Optional. */
+  /** Array de critérios de filtro. Opcional. */
   where?: WhereCriteriaDto[];
-  /** Pagination criteria. Optional. */
+  /** Critérios de paginação. Opcional. */
   pagination?: PaginationCriteriaDto;
-  /** Array of sort criteria. Optional. */
+  /** Array de critérios de ordenação. Opcional. */
   sort?: SortCriteriaDto[];
 }

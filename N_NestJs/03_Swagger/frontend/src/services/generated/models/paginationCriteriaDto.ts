@@ -8,8 +8,8 @@
  */
 
 export interface PaginationCriteriaDto {
-  /** Page number, starting from 1. */
+  /** Número da página, começando em 1. */
   page: number;
-  /** Number of items per page. */
+  /** Número de itens por página. */
   limit: number;
 }

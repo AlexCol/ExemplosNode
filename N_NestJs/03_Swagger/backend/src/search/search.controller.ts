@@ -1,5 +1,5 @@
 import { Controller, Get, Post } from '@nestjs/common';
-import { ApiBody, ApiProperty, ApiResponse } from '@nestjs/swagger';
+import { ApiBody, ApiResponse } from '@nestjs/swagger';
 import { ErrorResponseDto } from '../dto/error-response.dto';
 import { ResponseDto } from '../dto/response.dto';
 import { EntidadeTeste } from '../entities/usuario.entity';
@@ -7,17 +7,6 @@ import { AutoApiQuery } from './decorators/AutoApiQuery';
 import { SearchCriteriaDto } from './dtos/SearchCriteriaDto';
 import { BodySearchCriteria } from './param/body-search-criteria.param';
 import { QuerySearchCriteria } from './param/query-search-criteria.param';
-
-class testeTwoDto {
-  @ApiProperty({ type: EntidadeTeste })
-  entidadeOriginal: EntidadeTeste;
-  @ApiProperty()
-  entidadeJson: JSON;
-  @ApiProperty({ type: EntidadeTeste })
-  entidadeRecriada: EntidadeTeste;
-  @ApiProperty()
-  entidadeRecriadaJson: JSON;
-}
 
 @Controller()
 export class SearchController {

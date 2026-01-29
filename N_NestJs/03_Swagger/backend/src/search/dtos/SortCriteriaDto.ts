@@ -2,11 +2,11 @@ import { ApiProperty } from '@nestjs/swagger/dist/decorators/api-property.decora
 import { IsIn, IsString } from 'class-validator';
 
 export class SortCriteriaDto {
-  @ApiProperty({ description: 'Field to sort by. Must be one of the response fields.' })
+  @ApiProperty({ description: 'Campo para ordenar. Deve ser um dos campos da resposta.' })
   @IsString()
   field!: string;
 
-  @ApiProperty({ description: 'Sort order, either ascending or descending. Must be either "asc" or "desc".' })
+  @ApiProperty({ description: 'Ordem de ordenação, ascendente ou descendente. Deve ser "asc" ou "desc".' })
   @IsIn(['asc', 'desc'])
   order!: 'asc' | 'desc';
 }

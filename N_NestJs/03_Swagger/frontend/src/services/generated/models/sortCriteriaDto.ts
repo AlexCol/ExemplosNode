@@ -8,8 +8,8 @@
  */
 
 export interface SortCriteriaDto {
-  /** Field to sort by. Must be one of the response fields. */
+  /** Campo para ordenar. Deve ser um dos campos da resposta. */
   field: string;
-  /** Sort order, either ascending or descending. Must be either "asc" or "desc". */
+  /** Ordem de ordenação, ascendente ou descendente. Deve ser "asc" ou "desc". */
   order: string;
 }
