@@ -35,8 +35,9 @@ export class SearchController {
   @ApiDoc({
     summary: 'Busca com critérios via query parameters',
     query: ResponseDto,
+    //query: [{ name: 'idade', type: Number, required: false, description: 'Número da página.' }],
     response: ResponseDto,
-    isResponseArray: true,
+    isResponseArray: false,
   })
   //!EntidadeTeste usara apenas para verificar campos (não valida VO)
   searchQuery(@QuerySearchCriteria(EntidadeTeste) search: SearchCriteriaDto): ResponseDto[] {

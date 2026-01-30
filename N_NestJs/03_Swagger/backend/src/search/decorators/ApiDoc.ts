@@ -1,44 +1,55 @@
 import { applyDecorators, Type } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { ErrorResponseDto } from 'src/dto/error-response.dto';
-import { ApiSearchResponse } from './ApiSearchResponse';
-import { AutoApiQuery } from './AutoApiQuery';
+import { ApiOperation, ApiParamOptions, ApiQueryOptions } from '@nestjs/swagger';
+import { ApiDocBody } from './ApiDocBody';
+import { ApiDocErrorResponse } from './ApiDocErrorResponse';
+import { ApiDocParam } from './ApiDocParam';
+import { ApiDocQuery } from './ApiDocQuery';
+import { ApiDocResponse } from './ApiDocResponse';
 
 interface ApiDocOptions {
   summary: string;
   description?: string;
-  query?: Type<any>;
-  body?: Type<any>;
+  params?: Type<unknown> | ApiParamOptions[];
+  query?: Type<unknown> | ApiQueryOptions[];
+  body?: Type<unknown>;
+  response?: Type<unknown>;
   isPaginated?: boolean;
   isResponseArray?: boolean;
-  response?: Type<any>;
+  errStatus?: number[];
 }
 
 export function ApiDoc(options: ApiDocOptions) {
-  const decorators = [
+  const decorators: MethodDecorator[] = [];
+
+  // Adiciona a operação com sumário e descrição
+  decorators.push(
     ApiOperation({
       summary: options.summary,
       description: options.description,
     }),
-  ];
+  );
+
+  //Adiciona path parameters
+  if (options.params) {
+    decorators.push(ApiDocParam(options.params));
+  }
 
   // Adiciona query parameters
   if (options.query) {
-    decorators.push(AutoApiQuery(options.query));
+    decorators.push(ApiDocQuery(options.query, options.isPaginated || false));
   }
 
+  // Adiciona o corpo da requisição
   if (options.body) {
-    decorators.push(ApiBody({ type: options.body }));
+    decorators.push(ApiDocBody(options.body));
   }
 
-  // Configura a resposta
-  if (options.isPaginated && options.response) {
-    decorators.push(ApiSearchResponse(options.response));
-  } else {
-    decorators.push(ApiResponse({ status: 200, type: options.response, isArray: options.isResponseArray }));
+  if (options.response) {
+    decorators.push(ApiDocResponse(options.response, options.isPaginated ?? false, options.isResponseArray ?? false));
   }
 
-  decorators.push(ApiResponse({ status: 400, type: ErrorResponseDto }));
+  // Adiciona respostas de erro
+  decorators.push(ApiDocErrorResponse(options.errStatus || [400]));
 
   return applyDecorators(...decorators);
 }
