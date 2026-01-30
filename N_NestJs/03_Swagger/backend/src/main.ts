@@ -54,11 +54,7 @@ function setupSwagger(app: INestApplication<any>) {
 }
 
 function configCors(app: INestApplication<any>) {
-  const allowedOrigins = [
-    'http://localhost:3001',
-    'http://localhost:3002',
-    'http://localhost:3003',
-  ];
+  const allowedOrigins = ['http://localhost:3001', 'http://localhost:3002', 'http://localhost:3003'];
 
   app.enableCors({
     origin: (origin, callback) => {
