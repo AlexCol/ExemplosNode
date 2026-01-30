@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class SearchCriteriaReturnType<T> {
+export class PaginatedReturn<T> {
   @ApiProperty({ description: 'Array de dados retornados pela busca.', isArray: true })
   data: T[];
 

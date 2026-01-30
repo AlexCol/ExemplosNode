@@ -2,8 +2,8 @@ import { Controller, Get, Post } from '@nestjs/common';
 import { ResponseDto } from '../dto/response.dto';
 import { EntidadeTeste } from '../entities/usuario.entity';
 import { ApiDoc } from './decorators/ApiDoc';
+import { PaginatedReturn } from './dtos/PaginatedReturn';
 import { SearchCriteriaDto } from './dtos/SearchCriteriaDto';
-import { SearchCriteriaReturnType } from './dtos/SearchCriteriaReturnType';
 import { BodySearchCriteria } from './param/body-search-criteria.param';
 import { QuerySearchCriteria } from './param/query-search-criteria.param';
 
@@ -59,8 +59,8 @@ export class SearchController {
     isPaginated: true,
   })
   //!EntidadeTeste usara apenas para verificar campos (não valida VO)
-  searchPaginated(): SearchCriteriaReturnType<ResponseDto> {
-    const searchResult: SearchCriteriaReturnType<ResponseDto> = {
+  searchPaginated(): PaginatedReturn<ResponseDto> {
+    const searchResult: PaginatedReturn<ResponseDto> = {
       data: [
         {
           id: '1',
