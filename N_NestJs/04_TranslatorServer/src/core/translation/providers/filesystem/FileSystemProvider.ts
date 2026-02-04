@@ -2,7 +2,6 @@ import { promises as fs } from 'fs';
 import path, { join } from 'path';
 import { Provider } from '../../contracts/Provider';
 import { CatalogEntry } from '../../contracts/Types';
-import { BadRequestException } from '@nestjs/common';
 
 export class FileSystemProvider implements Provider {
   constructor(private readonly basePath: string) {}
@@ -63,7 +62,7 @@ export class FileSystemProvider implements Provider {
     const data = await this.load(entry);
 
     if (key in data) {
-      throw new BadRequestException(`Key '${key}' already exists`);
+      throw new Error(`Key '${key}' already exists`);
     }
 
     data[key] = value;
@@ -122,7 +121,7 @@ export class FileSystemProvider implements Provider {
     try {
       await fs.unlink(filePath);
     } catch {
-      throw new BadRequestException(`Namespace #${namespace} does not exist`);
+      throw new Error(`Namespace #${namespace} does not exist`);
     }
   }
 
