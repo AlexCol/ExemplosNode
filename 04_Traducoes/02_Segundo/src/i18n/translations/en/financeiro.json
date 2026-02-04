@@ -1,0 +1,5 @@
+{
+  "balance": "Current balance: {{value}}",
+  "invoiceCount_one": "{{count}} invoice",
+  "invoiceCount_other": "{{count}} invoices"
+}
