@@ -1,0 +1,5 @@
+{
+  "Saldo atual: {{value}}": "Current balance: {{value}}",
+  "{{count}} fatura": "{{count}} invoice",
+  "{{count}} faturas": "{{count}} invoices"
+}
