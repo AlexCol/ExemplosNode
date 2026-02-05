@@ -1,18 +1,18 @@
 import { promises as fs } from 'fs';
-import path, { join } from 'path';
-import { CatalogEntry } from '../../contracts/Types';
+import path from 'path';
+import { CatalogEntry, Environment } from '../../contracts/Types';
 import { BadRequestException } from '@nestjs/common';
+import { Provider } from '../../contracts/Provider';
 
-export class FileSystemProvider {
-  // implements Provider {
+export class FileSystemProvider implements Provider {
   constructor(private readonly basePath: string) {}
 
   /*****************************************************/
   /* Metodos da Interface                              */
   /*****************************************************/
   async load(catalogo: CatalogEntry) {
-    const { sistema, language, namespace } = catalogo;
-    const filePath = path.join(this.basePath, sistema, language, `${namespace}.json`);
+    const { env, sistema, language, namespace } = catalogo;
+    const filePath = path.join(this.basePath, env, sistema, language, `${namespace}.json`);
 
     try {
       const content = await fs.readFile(filePath, 'utf-8');
@@ -22,15 +22,15 @@ export class FileSystemProvider {
     }
   }
 
-  async listLanguages(sistema: string): Promise<string[]> {
-    const systemPath = path.join(this.basePath, sistema);
+  async listLanguages(env: Environment, sistema: string): Promise<string[]> {
+    const systemPath = path.join(this.basePath, env, sistema);
     const entries = await fs.readdir(systemPath, { withFileTypes: true });
 
     return entries.filter((e) => e.isDirectory()).map((e) => e.name);
   }
 
   async createLanguage(sistema: string, language: string): Promise<void> {
-    const dir = this.resolveLanguageDir(sistema, language);
+    const dir = this.resolveLanguageDir('dev', sistema, language);
 
     try {
       await fs.access(dir);
@@ -43,7 +43,7 @@ export class FileSystemProvider {
   }
 
   async deleteLanguage(sistema: string, language: string): Promise<void> {
-    const dir = this.resolveLanguageDir(sistema, language);
+    const dir = this.resolveLanguageDir('dev', sistema, language);
 
     try {
       await fs.access(dir);
@@ -58,6 +58,7 @@ export class FileSystemProvider {
   }
 
   async saveKey(entry: CatalogEntry, key: string, value: any) {
+    entry.env = 'dev';
     const filePath = this.resolvePath(entry);
 
     const data = await this.load(entry);
@@ -73,6 +74,7 @@ export class FileSystemProvider {
   }
 
   async deleteKey(entry: CatalogEntry, key: string): Promise<void> {
+    entry.env = 'dev';
     const filePath = this.resolvePath(entry);
 
     try {
@@ -90,8 +92,8 @@ export class FileSystemProvider {
     }
   }
 
-  async listNamespaces(sistema: string, language: string): Promise<string[]> {
-    const dir = this.resolveLanguageDir(sistema, language);
+  async listNamespaces(env: Environment, sistema: string, language: string): Promise<string[]> {
+    const dir = this.resolveLanguageDir(env, sistema, language);
 
     const files = await fs.readdir(dir);
 
@@ -99,7 +101,7 @@ export class FileSystemProvider {
   }
 
   async createNamespace(sistema: string, language: string, namespace: string): Promise<void> {
-    const filePath = this.resolveNamespacePath(sistema, language, namespace);
+    const filePath = this.resolveNamespacePath('dev', sistema, language, namespace);
 
     // se já existe → erro explícito
     try {
@@ -117,7 +119,7 @@ export class FileSystemProvider {
   }
 
   async deleteNamespace(sistema: string, language: string, namespace: string): Promise<void> {
-    const filePath = this.resolveNamespacePath(sistema, language, namespace);
+    const filePath = this.resolveNamespacePath('dev', sistema, language, namespace);
 
     try {
       await fs.unlink(filePath);
@@ -126,17 +128,53 @@ export class FileSystemProvider {
     }
   }
 
+  async publishEnvironment(sistema: string, from: 'dev', to: 'prod'): Promise<void> {
+    const sourcePath = path.join(this.basePath, from, sistema);
+    const targetPath = path.join(this.basePath, to, sistema);
+
+    // 1. Limpar target recursivamente
+    await this.deleteDirectoryRecursive(targetPath);
+
+    // 2. Copiar tudo de source para target (recursivo)
+    await this.copyDirectoryRecursive(sourcePath, targetPath);
+  }
+
   /*****************************************************/
   /* Metodos da Privados                               */
   /*****************************************************/
-  private resolvePath({ sistema, language, namespace }: CatalogEntry) {
-    return path.join(this.basePath, sistema, language, `${namespace}.json`);
+  private resolvePath({ env, sistema, language, namespace }: CatalogEntry) {
+    return path.join(this.basePath, env, sistema, language, `${namespace}.json`);
   }
-  private resolveNamespacePath(sistema: string, language: string, namespace: string) {
-    return path.join(this.basePath, sistema, language, `${namespace}.json`);
+  private resolveNamespacePath(env: string, sistema: string, language: string, namespace: string) {
+    return path.join(this.basePath, env, sistema, language, `${namespace}.json`);
   }
 
-  private resolveLanguageDir(sistema: string, language: string): string {
-    return join(this.basePath, sistema, language);
+  private resolveLanguageDir(env: Environment, sistema: string, language: string): string {
+    return path.join(this.basePath, env, sistema, language);
+  }
+
+  private async deleteDirectoryRecursive(dirPath: string): Promise<void> {
+    try {
+      await fs.rm(dirPath, { recursive: true, force: true });
+    } catch {
+      // diretório não existe, ok
+    }
+  }
+
+  private async copyDirectoryRecursive(source: string, target: string): Promise<void> {
+    await fs.mkdir(target, { recursive: true });
+
+    const entries = await fs.readdir(source, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const sourcePath = path.join(source, entry.name);
+      const targetPath = path.join(target, entry.name);
+
+      if (entry.isDirectory()) {
+        await this.copyDirectoryRecursive(sourcePath, targetPath);
+      } else {
+        await fs.copyFile(sourcePath, targetPath);
+      }
+    }
   }
 }

@@ -186,24 +186,6 @@ export class BunnyStorageProvider implements Provider {
     await this.copyDirectoryRecursive(sourcePrefix, targetPrefix);
   }
 
-  private async deleteDirectoryRecursive(prefix: string): Promise<void> {
-    try {
-      const items = await BunnyStorageSDK.file.list(this.storageZone, prefix);
-
-      for (const item of items) {
-        const itemPath = `${prefix}/${item.objectName}`;
-
-        if (item.isDirectory) {
-          await this.deleteDirectoryRecursive(itemPath);
-        } else {
-          await BunnyStorageSDK.file.remove(this.storageZone, itemPath);
-        }
-      }
-    } catch {
-      // Pasta não existe, ok
-    }
-  }
-
   /*****************************************************/
   /* Metodos da Privados                               */
   /*****************************************************/
@@ -247,6 +229,24 @@ export class BunnyStorageProvider implements Provider {
         const file = await BunnyStorageSDK.file.download(this.storageZone, sourcePath);
         await BunnyStorageSDK.file.upload(this.storageZone, targetPath, file.stream);
       }
+    }
+  }
+
+  private async deleteDirectoryRecursive(prefix: string): Promise<void> {
+    try {
+      const items = await BunnyStorageSDK.file.list(this.storageZone, prefix);
+
+      for (const item of items) {
+        const itemPath = `${prefix}/${item.objectName}`;
+
+        if (item.isDirectory) {
+          await this.deleteDirectoryRecursive(itemPath);
+        } else {
+          await BunnyStorageSDK.file.remove(this.storageZone, itemPath);
+        }
+      }
+    } catch {
+      // Pasta não existe, ok
     }
   }
 }
