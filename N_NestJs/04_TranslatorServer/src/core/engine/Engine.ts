@@ -7,6 +7,7 @@ import { MissingKeysStatus } from './interface/MissingKeysStatus';
 export class Engine {
   private static cache = new InMemoryCache();
   private readonly BASE_LANGUAGE = 'pt-BR';
+  private readonly availableLanguages: string[];
 
   constructor(private readonly provider: Provider) {}
 
@@ -18,6 +19,10 @@ export class Engine {
     namespace: string,
   ): Promise<Record<string, any>> {
     language = this.validateLanguage(language);
+    const availableLanguages = await this.provider.listLanguages('dev', sistema);
+    if (!availableLanguages.includes(language)) {
+      throw new BadRequestException('Language does not exist');
+    }
 
     const cacheKey = `${env}:${sistema}:${language}:${namespace}`;
 
@@ -45,10 +50,6 @@ export class Engine {
       translationCatalog = { ...baseLangCatalog, ...specificLangCatalog };
     } else {
       translationCatalog = await this.provider.load({ sistema, language, namespace, env });
-    }
-
-    if (Object.keys(translationCatalog).length === 0) {
-      throw new BadRequestException('Catalog is empty or does not exist');
     }
 
     const merged = { ...baseCatalog, ...translationCatalog };
