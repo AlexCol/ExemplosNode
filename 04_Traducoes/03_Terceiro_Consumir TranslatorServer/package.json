@@ -1,0 +1,22 @@
+{
+  "name": "03_terceiro_consumir-translatorserver",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon --exec ts-node-dev --files --transpile-only --quiet src/index.ts",
+    "lt": "ts-node src/translations/scripts/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.2.0",
+    "nodemon": "^3.1.11"
+  },
+  "dependencies": {
+    "axios": "^1.13.4",
+    "express": "^5.2.1"
+  }
+}
