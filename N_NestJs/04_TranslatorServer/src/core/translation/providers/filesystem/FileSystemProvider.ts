@@ -1,10 +1,10 @@
 import { promises as fs } from 'fs';
 import path, { join } from 'path';
-import { Provider } from '../../contracts/Provider';
 import { CatalogEntry } from '../../contracts/Types';
 import { BadRequestException } from '@nestjs/common';
 
-export class FileSystemProvider implements Provider {
+export class FileSystemProvider {
+  // implements Provider {
   constructor(private readonly basePath: string) {}
 
   /*****************************************************/

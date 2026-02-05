@@ -2,45 +2,56 @@ import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { CatalogService } from './catalog.service';
 import { CreateBaseEntryDto } from './dto/create-base-entry.dto';
 import { CreateTranslationDto } from './dto/create-transation.dto';
+import { Environment } from '@/core/translation/contracts/Types';
 
 @Controller('catalog')
 export class CatalogController {
   constructor(private readonly service: CatalogService) {}
 
   /**********************************************/
+  /* Publisher                                  */
+  /**********************************************/
+  @Post(':sistema/publish')
+  publish(@Param('sistema') sistema: string) {
+    return this.service.publishToProd(sistema);
+  }
+
+  /**********************************************/
   /* Getters                                    */
   /**********************************************/
-  @Get(':sistema/:lang/:namespace')
+  @Get(':env/:sistema/:lang/:namespace')
   async getCatalog(
+    @Param('env') env: Environment,
     @Param('sistema') sistema: string,
     @Param('lang') lang: string,
     @Param('namespace') namespace: string,
   ) {
-    return await this.service.getCatalog(sistema, lang, namespace);
+    return await this.service.getCatalog(env, sistema, lang, namespace);
   }
 
-  @Get(':sistema/:lang/:namespace/missing')
+  @Get(':env/:sistema/:lang/:namespace/missing')
   async getMissingKeys(
+    @Param('env') env: Environment,
     @Param('sistema') sistema: string,
     @Param('lang') lang: string,
     @Param('namespace') namespace: string,
   ) {
-    return await this.service.getMissingKeys(sistema, lang, namespace);
+    return await this.service.getMissingKeys(env, sistema, lang, namespace);
   }
 
-  @Get(':sistema/namespaces')
-  async listNamespaces(@Param('sistema') sistema: string) {
-    return await this.service.listNamespaces(sistema);
+  @Get(':env/:sistema/namespaces')
+  async listNamespaces(@Param('env') env: Environment, @Param('sistema') sistema: string) {
+    return await this.service.listNamespaces(env, sistema);
   }
 
-  @Get(':sistema/languages')
-  async listLanguages(@Param('sistema') sistema: string) {
-    return await this.service.listLanguages(sistema);
+  @Get(':env/:sistema/languages')
+  async listLanguages(@Param('env') env: Environment, @Param('sistema') sistema: string) {
+    return await this.service.listLanguages(env, sistema);
   }
 
-  @Get(':sistema/status/missing-keys')
-  getMissingKeysStatus(@Param('sistema') sistema: string) {
-    return this.service.getMissingKeysStatus(sistema);
+  @Get(':env/:sistema/status/missing-keys')
+  getMissingKeysStatus(@Param('env') env: Environment, @Param('sistema') sistema: string) {
+    return this.service.getMissingKeysStatus(env, sistema);
   }
 
   /**********************************************/

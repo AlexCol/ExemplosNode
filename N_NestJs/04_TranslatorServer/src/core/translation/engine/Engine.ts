@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { InMemoryCache } from '../cache/InMemoryCache';
 import { Provider } from '../contracts/Provider';
-import { CatalogEntry } from '../contracts/Types';
+import { CatalogEntry, Environment } from '../contracts/Types';
 import { MissingKeysStatus } from './interface/MissingKeysStatus';
 
 export class Engine {
@@ -11,7 +11,12 @@ export class Engine {
   constructor(private readonly provider: Provider) {}
 
   //! busca dados
-  async getCatalog(sistema: string, language: string, namespace: string): Promise<Record<string, any>> {
+  async getCatalog(
+    env: Environment,
+    sistema: string,
+    language: string,
+    namespace: string,
+  ): Promise<Record<string, any>> {
     language = this.validateLanguage(language);
 
     const cacheKey = `${sistema}:${language}:${namespace}`;
@@ -23,7 +28,7 @@ export class Engine {
     }
 
     //? sempre carrega o base
-    const baseCatalog = await this.provider.load({ sistema, language: this.BASE_LANGUAGE, namespace });
+    const baseCatalog = await this.provider.load({ sistema, language: this.BASE_LANGUAGE, namespace, env });
 
     //? se for base, não faz merge
     if (language === this.BASE_LANGUAGE) {
@@ -33,7 +38,7 @@ export class Engine {
     }
 
     //? carrega tradução (pode estar incompleta ou vazia)
-    const translationCatalog = await this.provider.load({ sistema, language, namespace });
+    const translationCatalog = await this.provider.load({ sistema, language, namespace, env });
 
     const merged = { ...baseCatalog, ...translationCatalog };
 
@@ -42,12 +47,13 @@ export class Engine {
     return merged;
   }
 
-  //! adiciona entrada base (modelo verdade)
+  //! adiciona entrada base (modelo verdade) (a inclusão ocorre apenas em Dev - para espelhar em prod deve-se usar 'publish')
   async addBaseEntry(sistema: string, namespace: string, key: string) {
     const entry: CatalogEntry = {
       sistema,
       namespace,
       language: this.BASE_LANGUAGE,
+      env: 'dev',
     };
 
     await this.provider.saveKey(entry, key, key);
@@ -56,7 +62,7 @@ export class Engine {
     this.cache.delete(`${sistema}:${this.BASE_LANGUAGE}:${namespace}`);
   }
 
-  //! adiciona tradução para entrada base
+  //! adiciona tradução para entrada base (a inclusão ocorre apenas em Dev - para espelhar em prod deve-se usar 'publish')
   async addTranslation(sistema: string, namespace: string, language: string, key: string, value: string) {
     language = this.validateLanguage(language);
 
@@ -72,7 +78,8 @@ export class Engine {
       sistema,
       namespace,
       language: this.BASE_LANGUAGE,
-    };
+      env: 'dev',
+    } satisfies CatalogEntry;
 
     const baseCatalog = await this.provider.load(baseEntry);
 
@@ -84,7 +91,8 @@ export class Engine {
       sistema,
       namespace,
       language,
-    };
+      env: 'dev',
+    } satisfies CatalogEntry;
 
     await this.provider.saveKey(translationEntry, key, value);
 
@@ -93,15 +101,15 @@ export class Engine {
   }
 
   //! busca chaves que existem no base mas estão faltando na tradução
-  async getMissingKeys(sistema: string, language: string, namespace: string): Promise<string[]> {
+  async getMissingKeys(env: Environment, sistema: string, language: string, namespace: string): Promise<string[]> {
     language = this.validateLanguage(language);
 
     if (language === this.BASE_LANGUAGE) {
       return [];
     }
 
-    const baseCatalog = await this.provider.load({ sistema, namespace, language: this.BASE_LANGUAGE });
-    const translationCatalog = await this.provider.load({ sistema, namespace, language });
+    const baseCatalog = await this.provider.load({ sistema, namespace, language: this.BASE_LANGUAGE, env });
+    const translationCatalog = await this.provider.load({ sistema, namespace, language, env });
 
     const baseKeys = Object.keys(baseCatalog);
     const translationKeys = new Set(Object.keys(translationCatalog));
@@ -109,14 +117,14 @@ export class Engine {
     return baseKeys.filter((key) => !translationKeys.has(key));
   }
 
-  //! remove uma chave do base e de todas as traduções
+  //! remove uma chave do base e de todas as traduções (a exclusão ocorre apenas em Dev - para espelhar em prod deve-se usar 'publish')
   async removeKey(sistema: string, namespace: string, key: string) {
     if (!key || !key.trim()) {
       throw new BadRequestException('Invalid key');
     }
 
     //? garante que existe no base
-    const baseEntry: CatalogEntry = { sistema, namespace, language: this.BASE_LANGUAGE };
+    const baseEntry: CatalogEntry = { sistema, namespace, language: this.BASE_LANGUAGE, env: 'dev' };
 
     const baseCatalog = await this.provider.load(baseEntry);
 
@@ -128,11 +136,11 @@ export class Engine {
     await this.provider.deleteKey(baseEntry, key);
 
     //? remove de todas as outras linguagens
-    const languages = await this.provider.listLanguages(sistema);
+    const languages = await this.provider.listLanguages('dev', sistema);
     await Promise.all(
       languages
         .filter((lang) => lang !== this.BASE_LANGUAGE)
-        .map((lang) => this.provider.deleteKey({ sistema, namespace, language: lang }, key)),
+        .map((lang) => this.provider.deleteKey({ sistema, namespace, language: lang, env: 'dev' }, key)),
     );
 
     //? invalida cache globalmente
@@ -140,18 +148,18 @@ export class Engine {
   }
 
   //! lista namespaces existentes
-  async listNamespaces(sistema: string): Promise<string[]> {
+  async listNamespaces(env: Environment, sistema: string): Promise<string[]> {
     const languages = this.BASE_LANGUAGE;
-    return this.provider.listNamespaces(sistema, languages);
+    return this.provider.listNamespaces(env, sistema, languages);
   }
 
-  //! cria um namespace novo em todas as linguagens
+  //! cria um namespace novo em todas as linguagens (a inclusão ocorre apenas em Dev - para espelhar em prod deve-se usar 'publish')
   async createNamespace(sistema: string, namespace: string) {
     if (!namespace || !namespace.trim()) {
       throw new Error('Invalid namespace');
     }
 
-    const languages = await this.provider.listLanguages(sistema);
+    const languages = await this.provider.listLanguages('dev', sistema);
 
     // se não houver idiomas ainda, isso é erro estrutural
     if (!languages.includes(this.BASE_LANGUAGE)) {
@@ -163,13 +171,13 @@ export class Engine {
     this.cache.clear();
   }
 
-  //! remove um namespace do base e de todas as traduções
+  //! remove um namespace do base e de todas as traduções (a exclusão ocorre apenas em Dev - para espelhar em prod deve-se usar 'publish')
   async removeNamespace(sistema: string, namespace: string) {
     if (!namespace || !namespace.trim()) {
       throw new BadRequestException('Invalid namespace');
     }
 
-    const languages = await this.provider.listLanguages(sistema);
+    const languages = await this.provider.listLanguages('dev', sistema);
     await Promise.all(languages.map((language) => this.provider.deleteNamespace(sistema, language, namespace)));
 
     //? invalida tudo relacionado
@@ -177,8 +185,8 @@ export class Engine {
   }
 
   //! lista os idiomas existentes
-  async listLanguages(sistema: string): Promise<string[]> {
-    const languages = await this.provider.listLanguages(sistema);
+  async listLanguages(env: Environment, sistema: string): Promise<string[]> {
+    const languages = await this.provider.listLanguages(env, sistema);
 
     // opcional: garantir que base sempre exista
     if (!languages.includes(this.BASE_LANGUAGE)) {
@@ -188,11 +196,11 @@ export class Engine {
     return languages;
   }
 
-  //! cria um novo idioma baseado no base
+  //! cria um novo idioma baseado no base (a inclusão ocorre apenas em Dev - para espelhar em prod deve-se usar 'publish')
   async createLanguage(sistema: string, language: string) {
     language = this.validateLanguage(language);
 
-    const languages = await this.provider.listLanguages(sistema);
+    const languages = await this.provider.listLanguages('dev', sistema);
 
     if (languages.includes(language)) {
       throw new BadRequestException('Language already exists');
@@ -205,14 +213,14 @@ export class Engine {
 
     await this.provider.createLanguage(sistema, language);
 
-    const namespaces = await this.provider.listNamespaces(sistema, this.BASE_LANGUAGE);
+    const namespaces = await this.provider.listNamespaces('dev', sistema, this.BASE_LANGUAGE);
 
     await Promise.all(namespaces.map((ns) => this.provider.createNamespace(sistema, language, ns)));
 
     this.cache.clear();
   }
 
-  //! deleta um idioma
+  //! deleta um idioma (a exclusão ocorre apenas em Dev - para espelhar em prod deve-se usar 'publish')
   async deleteLanguage(sistema: string, language: string): Promise<void> {
     language = this.validateLanguage(language);
 
@@ -226,10 +234,11 @@ export class Engine {
     this.cache.deleteByPrefix(`${sistema}:${language}:`);
   }
 
-  async getMissingKeysStatus(sistema: string): Promise<Record<string, MissingKeysStatus>> {
-    const languages = await this.provider.listLanguages(sistema);
+  //! busca status de chaves faltantes por idioma e namespace
+  async getMissingKeysStatus(env: Environment, sistema: string): Promise<Record<string, MissingKeysStatus>> {
+    const languages = await this.provider.listLanguages(env, sistema);
 
-    const namespaces = await this.provider.listNamespaces(sistema, this.BASE_LANGUAGE);
+    const namespaces = await this.provider.listNamespaces(env, sistema, this.BASE_LANGUAGE);
 
     // carrega base uma vez por namespace
     const baseCatalogs = new Map<string, Set<string>>();
@@ -239,6 +248,7 @@ export class Engine {
         sistema,
         language: this.BASE_LANGUAGE,
         namespace: ns,
+        env,
       });
 
       baseCatalogs.set(ns, new Set(Object.keys(baseData)));
@@ -262,6 +272,7 @@ export class Engine {
           sistema,
           language: lang,
           namespace: ns,
+          env,
         });
 
         const currentKeys = new Set(Object.keys(data));
@@ -281,6 +292,12 @@ export class Engine {
     }
 
     return result;
+  }
+
+  //! publica mudanças de Dev para Prod
+  async publishToProd(sistema: string): Promise<void> {
+    await this.provider.publishEnvironment(sistema, 'dev', 'prod');
+    this.cache.clear();
   }
 
   /*****************************************************/

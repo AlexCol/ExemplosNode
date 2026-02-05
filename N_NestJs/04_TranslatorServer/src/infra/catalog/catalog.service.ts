@@ -1,3 +1,4 @@
+import { Environment } from '@/core/translation/contracts/Types';
 import { Engine } from '@/core/translation/engine/Engine';
 import { Injectable } from '@nestjs/common';
 
@@ -6,26 +7,33 @@ export class CatalogService {
   constructor(private readonly engine: Engine) {}
 
   /**********************************************/
+  /* Publisher                                  */
+  /**********************************************/
+  async publishToProd(sistema: string): Promise<void> {
+    return await this.engine.publishToProd(sistema);
+  }
+
+  /**********************************************/
   /* Getters                                    */
   /**********************************************/
-  async getCatalog(sistema: string, lang: string, namespace: string) {
-    return await this.engine.getCatalog(sistema, lang, namespace);
+  async getCatalog(env: Environment, sistema: string, lang: string, namespace: string) {
+    return await this.engine.getCatalog(env, sistema, lang, namespace);
   }
 
-  async getMissingKeys(sistema: string, lang: string, namespace: string) {
-    return await this.engine.getMissingKeys(sistema, lang, namespace);
+  async getMissingKeys(env: Environment, sistema: string, lang: string, namespace: string) {
+    return await this.engine.getMissingKeys(env, sistema, lang, namespace);
   }
 
-  async listNamespaces(sistema: string) {
-    return await this.engine.listNamespaces(sistema);
+  async listNamespaces(env: Environment, sistema: string) {
+    return await this.engine.listNamespaces(env, sistema);
   }
 
-  async listLanguages(sistema: string) {
-    return await this.engine.listLanguages(sistema);
+  async listLanguages(env: Environment, sistema: string) {
+    return await this.engine.listLanguages(env, sistema);
   }
 
-  getMissingKeysStatus(sistema: string) {
-    return this.engine.getMissingKeysStatus(sistema);
+  getMissingKeysStatus(env: Environment, sistema: string) {
+    return this.engine.getMissingKeysStatus(env, sistema);
   }
 
   /**********************************************/

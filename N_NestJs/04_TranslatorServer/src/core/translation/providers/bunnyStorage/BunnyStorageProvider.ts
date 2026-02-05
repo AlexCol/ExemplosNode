@@ -1,6 +1,6 @@
 import * as BunnyStorageSDK from '@bunny.net/storage-sdk';
 import { Provider } from '../../contracts/Provider';
-import { CatalogEntry } from '../../contracts/Types';
+import { CatalogEntry, Environment } from '../../contracts/Types';
 import { BadRequestException } from '@nestjs/common';
 import { ReadableStream } from 'stream/web';
 
@@ -75,8 +75,8 @@ export class BunnyStorageProvider implements Provider {
     await BunnyStorageSDK.file.upload(this.storageZone, filePath, stream);
   }
 
-  async listLanguages(sistema: string): Promise<string[]> {
-    const prefix = this.resolveSystemPrefix(sistema);
+  async listLanguages(env: Environment, sistema: string): Promise<string[]> {
+    const prefix = this.resolveSystemPrefix(env, sistema);
     const items = await BunnyStorageSDK.file.list(this.storageZone, prefix);
 
     const directories = items.filter((i) => i.isDirectory);
@@ -94,7 +94,7 @@ export class BunnyStorageProvider implements Provider {
   }
 
   async createLanguage(sistema: string, language: string): Promise<void> {
-    const prefix = this.resolveLanguagePrefix(sistema, language);
+    const prefix = this.resolveLanguagePrefix('dev', sistema, language); //env: 'dev', //só se deleta diretamente o arquivo em DEV (prod é via publish)
 
     const items = await BunnyStorageSDK.file.list(this.storageZone, prefix);
     if (items.length > 0) {
@@ -113,7 +113,7 @@ export class BunnyStorageProvider implements Provider {
   }
 
   async deleteLanguage(sistema: string, language: string): Promise<void> {
-    const prefix = this.resolveLanguagePrefix(sistema, language);
+    const prefix = this.resolveLanguagePrefix('dev', sistema, language); //env: 'dev', //só se deleta diretamente o arquivo em DEV (prod é via publish)
 
     const items = await BunnyStorageSDK.file.list(this.storageZone, prefix);
 
@@ -127,8 +127,8 @@ export class BunnyStorageProvider implements Provider {
     // A pasta vazia é automaticamente removida pelo Bunny
   }
 
-  async listNamespaces(sistema: string, language: string): Promise<string[]> {
-    const prefix = this.resolveLanguagePrefix(sistema, language);
+  async listNamespaces(env: Environment, sistema: string, language: string): Promise<string[]> {
+    const prefix = this.resolveLanguagePrefix(env, sistema, language);
     const items = await BunnyStorageSDK.file.list(this.storageZone, prefix);
     return items.filter((i) => i.objectName.endsWith('.json')).map((i) => i.objectName.replace('.json', ''));
   }
@@ -138,6 +138,7 @@ export class BunnyStorageProvider implements Provider {
       sistema,
       language,
       namespace,
+      env: 'dev', //só se deleta diretamente o arquivo em DEV (prod é via publish)
     };
 
     const filePath = this.resolvePath(entry);
@@ -163,6 +164,7 @@ export class BunnyStorageProvider implements Provider {
       sistema,
       language,
       namespace,
+      env: 'dev', //só se deleta diretamente o arquivo em DEV (prod é via publish)
     };
     const filePath = this.resolvePath(entry);
 
@@ -173,19 +175,48 @@ export class BunnyStorageProvider implements Provider {
     }
   }
 
+  async publishEnvironment(sistema: string, from: 'dev', to: 'prod'): Promise<void> {
+    const sourcePrefix = `${this.translationsPath}/${from}/${sistema}`;
+    const targetPrefix = `${this.translationsPath}/${to}/${sistema}`;
+
+    // 1. Limpar target
+    await this.deleteDirectoryRecursive(targetPrefix);
+
+    // 2. Copiar tudo de source para target (recursivo)
+    await this.copyDirectoryRecursive(sourcePrefix, targetPrefix);
+  }
+
+  private async deleteDirectoryRecursive(prefix: string): Promise<void> {
+    try {
+      const items = await BunnyStorageSDK.file.list(this.storageZone, prefix);
+
+      for (const item of items) {
+        const itemPath = `${prefix}/${item.objectName}`;
+
+        if (item.isDirectory) {
+          await this.deleteDirectoryRecursive(itemPath);
+        } else {
+          await BunnyStorageSDK.file.remove(this.storageZone, itemPath);
+        }
+      }
+    } catch {
+      // Pasta não existe, ok
+    }
+  }
+
   /*****************************************************/
   /* Metodos da Privados                               */
   /*****************************************************/
-  private resolvePath({ sistema, language, namespace }: CatalogEntry): string {
-    return `${this.translationsPath}/${sistema}/${language}/${namespace}.json`.replace(/^\/+/, '');
+  private resolvePath({ env, sistema, language, namespace }: CatalogEntry): string {
+    return `${this.translationsPath}/${env}/${sistema}/${language}/${namespace}.json`.replace(/^\/+/, '');
   }
 
-  private resolveLanguagePrefix(sistema: string, language: string): string {
-    return `${this.translationsPath}/${sistema}/${language}`.replace(/^\/+/, '');
+  private resolveLanguagePrefix(env: Environment, sistema: string, language: string): string {
+    return `${this.translationsPath}/${env}/${sistema}/${language}`.replace(/^\/+/, '');
   }
 
-  private resolveSystemPrefix(sistema: string): string {
-    return `${this.translationsPath}/${sistema}`.replace(/^\/+/, '');
+  private resolveSystemPrefix(env: Environment, sistema: string): string {
+    return `${this.translationsPath}/${env}/${sistema}`.replace(/^\/+/, '');
   }
 
   private async streamToBuffer(stream: any): Promise<Buffer> {
@@ -199,5 +230,23 @@ export class BunnyStorageProvider implements Provider {
     }
 
     return Buffer.concat(chunks.map((c) => Buffer.from(c)));
+  }
+
+  private async copyDirectoryRecursive(sourcePrefix: string, targetPrefix: string): Promise<void> {
+    const items = await BunnyStorageSDK.file.list(this.storageZone, sourcePrefix);
+
+    for (const item of items) {
+      const sourcePath = `${sourcePrefix}/${item.objectName}`;
+      const targetPath = `${targetPrefix}/${item.objectName}`;
+
+      if (item.isDirectory) {
+        // Recursivamente copiar subpastas
+        await this.copyDirectoryRecursive(sourcePath, targetPath);
+      } else {
+        // Copiar arquivo
+        const file = await BunnyStorageSDK.file.download(this.storageZone, sourcePath);
+        await BunnyStorageSDK.file.upload(this.storageZone, targetPath, file.stream);
+      }
+    }
   }
 }
