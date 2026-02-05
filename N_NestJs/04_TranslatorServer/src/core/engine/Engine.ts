@@ -38,12 +38,24 @@ export class Engine {
     }
 
     //? carrega tradução (pode estar incompleta ou vazia)
-    const translationCatalog = await this.provider.load({ sistema, language, namespace, env });
+    let translationCatalog: Record<string, any>;
+    if (language.length !== 2 && language.includes('-')) {
+      const baseLangCatalog = await this.provider.load({ sistema, language: language.split('-')[0], namespace, env });
+      const specificLangCatalog = await this.provider.load({ sistema, language, namespace, env });
+      translationCatalog = { ...baseLangCatalog, ...specificLangCatalog };
+    } else {
+      translationCatalog = await this.provider.load({ sistema, language, namespace, env });
+    }
+
+    if (Object.keys(translationCatalog).length === 0) {
+      throw new BadRequestException('Catalog is empty or does not exist');
+    }
 
     const merged = { ...baseCatalog, ...translationCatalog };
 
     Engine.cache.set(cacheKey, merged);
     console.log('Cache miss for key:', cacheKey);
+
     return merged;
   }
 
@@ -102,7 +114,7 @@ export class Engine {
     await this.provider.saveKey(translationEntry, key, value);
 
     //? invalida cache desse idioma em dev
-    Engine.cache.deleteByPrefix(`${'dev'}:${sistema}:${language}:${namespace}`);
+    Engine.cache.clear();
   }
 
   //! busca chaves que existem no base mas estão faltando na tradução
