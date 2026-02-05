@@ -1,15 +1,10 @@
 import prettier from 'eslint-config-prettier/flat';
 import { defineConfig } from 'eslint/config';
 import path from 'path';
-import { fileURLToPath, pathToFileURL } from 'url';
+import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// Importa a regra customizada usando pathToFileURL para Windows
-const requireWithSchemaRule = await import(
-  pathToFileURL(path.resolve(__dirname, 'eslint-rules/require-with-schema.js')).href
-).then((m) => m.default || m);
 
 export default defineConfig([
   {

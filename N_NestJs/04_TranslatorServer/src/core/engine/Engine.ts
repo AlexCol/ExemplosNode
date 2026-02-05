@@ -2,15 +2,19 @@ import { BadRequestException } from '@nestjs/common';
 import { InMemoryCache } from '../cache/InMemoryCache';
 import { Provider } from '../contracts/Provider';
 import { CatalogEntry, Environment } from '../contracts/Types';
-import { MissingKeysStatus } from './interface/MissingKeysStatus';
+import { AvailableLanguages, MissingKeysStatus } from './interface/MissingKeysStatus';
 
 export class Engine {
   private static cache = new InMemoryCache();
+  private static availableLanguages: AvailableLanguages = {};
   private readonly BASE_LANGUAGE = 'pt-BR';
-  private readonly availableLanguages: string[];
 
   constructor(private readonly provider: Provider) {}
 
+  //#region Getter Catalog
+  /**********************************************/
+  /* Getter Catalog                             */
+  /**********************************************/
   //! busca dados
   async getCatalog(
     env: Environment,
@@ -19,13 +23,10 @@ export class Engine {
     namespace: string,
   ): Promise<Record<string, any>> {
     language = this.validateLanguage(language);
-    const availableLanguages = await this.provider.listLanguages('dev', sistema);
-    if (!availableLanguages.includes(language)) {
-      throw new BadRequestException('Language does not exist');
-    }
+    await this.languageAvailableOrThow(env, sistema, language);
 
+    //? tenta cache primeiro
     const cacheKey = `${env}:${sistema}:${language}:${namespace}`;
-
     const cached = Engine.cache.get(cacheKey);
     if (cached) {
       console.log('Cache hit for key:', cacheKey);
@@ -44,6 +45,8 @@ export class Engine {
 
     //? carrega tradução (pode estar incompleta ou vazia)
     let translationCatalog: Record<string, any>;
+
+    //? suporte para fallback de idioma (ex: en-US -> en)
     if (language.length !== 2 && language.includes('-')) {
       const baseLangCatalog = await this.provider.load({ sistema, language: language.split('-')[0], namespace, env });
       const specificLangCatalog = await this.provider.load({ sistema, language, namespace, env });
@@ -56,19 +59,17 @@ export class Engine {
 
     Engine.cache.set(cacheKey, merged);
     console.log('Cache miss for key:', cacheKey);
-
     return merged;
   }
+  //#endregion
 
+  //#region About Keys
+  /**********************************************/
+  /* About Keys                                 */
+  /**********************************************/
   //! adiciona entrada base (modelo verdade) (a inclusão ocorre apenas em Dev - para espelhar em prod deve-se usar 'publish')
   async addBaseEntry(sistema: string, namespace: string, key: string) {
-    const entry: CatalogEntry = {
-      sistema,
-      namespace,
-      language: this.BASE_LANGUAGE,
-      env: 'dev',
-    };
-
+    const entry: CatalogEntry = { sistema, namespace, language: this.BASE_LANGUAGE, env: 'dev' };
     await this.provider.saveKey(entry, key, key);
 
     //? invalida cache do base em dev
@@ -78,6 +79,7 @@ export class Engine {
   //! adiciona tradução para entrada base (a inclusão ocorre apenas em Dev - para espelhar em prod deve-se usar 'publish')
   async addTranslation(sistema: string, namespace: string, language: string, key: string, value: string) {
     language = this.validateLanguage(language);
+    await this.languageAvailableOrThow('dev', sistema, language);
 
     if (language === this.BASE_LANGUAGE) {
       throw new BadRequestException('Base language does not accept translations');
@@ -92,60 +94,30 @@ export class Engine {
       throw new BadRequestException('Language does not exist');
     }
 
-    const baseEntry = {
-      sistema,
-      namespace,
-      language: this.BASE_LANGUAGE,
-      env: 'dev',
-    } satisfies CatalogEntry;
-
+    const baseEntry = { sistema, namespace, language: this.BASE_LANGUAGE, env: 'dev' } satisfies CatalogEntry;
     const baseCatalog = await this.provider.load(baseEntry);
 
     if (!(key in baseCatalog)) {
       throw new BadRequestException(`Key '${key}' does not exist in base language`);
     }
 
-    const translationEntry = {
-      sistema,
-      namespace,
-      language,
-      env: 'dev',
-    } satisfies CatalogEntry;
-
+    const translationEntry = { sistema, namespace, language, env: 'dev' } satisfies CatalogEntry;
     await this.provider.saveKey(translationEntry, key, value);
 
     //? invalida cache desse idioma em dev
     Engine.cache.clear();
   }
 
-  //! busca chaves que existem no base mas estão faltando na tradução
-  async getMissingKeys(env: Environment, sistema: string, language: string, namespace: string): Promise<string[]> {
-    language = this.validateLanguage(language);
-
-    if (language === this.BASE_LANGUAGE) {
-      return [];
-    }
-
-    const baseCatalog = await this.provider.load({ sistema, namespace, language: this.BASE_LANGUAGE, env });
-    const translationCatalog = await this.provider.load({ sistema, namespace, language, env });
-
-    const baseKeys = Object.keys(baseCatalog);
-    const translationKeys = new Set(Object.keys(translationCatalog));
-
-    return baseKeys.filter((key) => !translationKeys.has(key));
-  }
-
   //! remove uma chave do base e de todas as traduções (a exclusão ocorre apenas em Dev - para espelhar em prod deve-se usar 'publish')
   async removeKey(sistema: string, namespace: string, key: string) {
+    //? valida chave
     if (!key || !key.trim()) {
       throw new BadRequestException('Invalid key');
     }
 
     //? garante que existe no base
     const baseEntry: CatalogEntry = { sistema, namespace, language: this.BASE_LANGUAGE, env: 'dev' };
-
     const baseCatalog = await this.provider.load(baseEntry);
-
     if (!(key in baseCatalog)) {
       throw new BadRequestException(`Key '${key}' does not exist in base language`);
     }
@@ -165,6 +137,77 @@ export class Engine {
     Engine.cache.deleteByPrefix(`${'dev'}`);
   }
 
+  //! busca chaves que existem no base mas estão faltando na tradução
+  async getMissingKeys(env: Environment, sistema: string, language: string, namespace: string): Promise<string[]> {
+    language = this.validateLanguage(language);
+    await this.languageAvailableOrThow(env, sistema, language);
+
+    if (language === this.BASE_LANGUAGE) {
+      return [];
+    }
+
+    const baseCatalog = await this.provider.load({ sistema, namespace, language: this.BASE_LANGUAGE, env });
+    const translationCatalog = await this.provider.load({ sistema, namespace, language, env });
+
+    const baseKeys = Object.keys(baseCatalog);
+    const translationKeys = new Set(Object.keys(translationCatalog));
+
+    return baseKeys.filter((key) => !translationKeys.has(key));
+  }
+
+  //! busca status de chaves faltantes por idioma e namespace
+  async getMissingKeysStatus(env: Environment, sistema: string): Promise<Record<string, MissingKeysStatus>> {
+    const languages = await this.provider.listLanguages(env, sistema);
+    const namespaces = await this.provider.listNamespaces(env, sistema, this.BASE_LANGUAGE);
+
+    //? carrega base uma vez por namespace
+    const baseCatalogs = new Map<string, Set<string>>();
+
+    //? para cada namespace, carrega o base e guarda as chaves em um Set para comparação rápida
+    for (const ns of namespaces) {
+      const baseData = await this.provider.load({ sistema, language: this.BASE_LANGUAGE, namespace: ns, env });
+      baseCatalogs.set(ns, new Set(Object.keys(baseData)));
+    }
+
+    //? para cada idioma, compara com o base e conta chaves faltantes por namespace e total
+    const result: Record<string, MissingKeysStatus> = {};
+    for (const lang of languages) {
+      //* idioma base não tem chaves faltantes
+      if (lang === this.BASE_LANGUAGE) {
+        result[lang] = { total: 0, namespaces: {} };
+        continue;
+      }
+
+      let total = 0;
+      const nsStatus: Record<string, number> = {};
+
+      for (const ns of namespaces) {
+        //* pega as chaves do base para esse namespace (já em Set para comparação rápida)
+        const baseKeys = baseCatalogs.get(ns)!;
+        //* pega as chaves do idioma para esse namespace
+        const data = await this.provider.load({ sistema, language: lang, namespace: ns, env });
+        //* compara chaves do idioma com o base para encontrar faltantes
+        const currentKeys = new Set(Object.keys(data));
+        //* filtra chaves que estão no base mas não estão no idioma atual
+        const missing = [...baseKeys].filter((k) => !currentKeys.has(k));
+        //* se houver chaves faltantes, registra no status do namespace e incrementa total
+        if (missing.length > 0) {
+          nsStatus[ns] = missing.length;
+          total += missing.length;
+        }
+      }
+
+      result[lang] = { total, namespaces: nsStatus };
+    }
+
+    return result;
+  }
+  //#endregion
+
+  //#region About Namespaces
+  /**********************************************/
+  /* About Namespaces                           */
+  /**********************************************/
   //! lista namespaces existentes
   async listNamespaces(env: Environment, sistema: string): Promise<string[]> {
     const languages = this.BASE_LANGUAGE;
@@ -173,17 +216,18 @@ export class Engine {
 
   //! cria um namespace novo em todas as linguagens (a inclusão ocorre apenas em Dev - para espelhar em prod deve-se usar 'publish')
   async createNamespace(sistema: string, namespace: string) {
+    //? valida namespace
     if (!namespace || !namespace.trim()) {
-      throw new Error('Invalid namespace');
+      throw new BadRequestException('Invalid namespace');
     }
 
+    //? se não houver idiomas ainda, isso é erro estrutural
     const languages = await this.provider.listLanguages('dev', sistema);
-
-    // se não houver idiomas ainda, isso é erro estrutural
     if (!languages.includes(this.BASE_LANGUAGE)) {
-      throw new Error('Base language not found');
+      throw new BadRequestException('Base language not found');
     }
 
+    //? cria namespace em todas as linguagens
     await Promise.all(languages.map((language) => this.provider.createNamespace(sistema, language, namespace)));
 
     //? invalida cache todo relacionado ao sistema
@@ -192,17 +236,24 @@ export class Engine {
 
   //! remove um namespace do base e de todas as traduções (a exclusão ocorre apenas em Dev - para espelhar em prod deve-se usar 'publish')
   async removeNamespace(sistema: string, namespace: string) {
+    //? valida namespace
     if (!namespace || !namespace.trim()) {
       throw new BadRequestException('Invalid namespace');
     }
 
+    //? busca linguagens para remover de cada uma delas
     const languages = await this.provider.listLanguages('dev', sistema);
     await Promise.all(languages.map((language) => this.provider.deleteNamespace(sistema, language, namespace)));
 
     //? invalida cache todo relacionado ao sistema
     Engine.cache.deleteByPrefix(`${'dev'}:${sistema}`);
   }
+  //#endregion
 
+  //#region About Languages
+  /**********************************************/
+  /* About Languages                            */
+  /**********************************************/
   //! lista os idiomas existentes
   async listLanguages(env: Environment, sistema: string): Promise<string[]> {
     const languages = await this.provider.listLanguages(env, sistema);
@@ -219,107 +270,59 @@ export class Engine {
   async createLanguage(sistema: string, language: string) {
     language = this.validateLanguage(language);
 
+    //? verifica se já existe
     const languages = await this.provider.listLanguages('dev', sistema);
-
     if (languages.includes(language)) {
       throw new BadRequestException('Language already exists');
     }
 
-    // base é obrigatória
+    //? base é obrigatória
     if (!languages.includes(this.BASE_LANGUAGE)) {
       throw new BadRequestException('Base language not found');
     }
 
+    //? cria idioma
     await this.provider.createLanguage(sistema, language);
 
+    //? copia namespaces do base para o novo idioma
     const namespaces = await this.provider.listNamespaces('dev', sistema, this.BASE_LANGUAGE);
-
     await Promise.all(namespaces.map((ns) => this.provider.createNamespace(sistema, language, ns)));
 
     //? invalida cache todo relacionado ao sistema
     Engine.cache.deleteByPrefix(`${'dev'}:${sistema}`);
+    Engine.availableLanguages['dev'][sistema] = [];
   }
 
   //! deleta um idioma (a exclusão ocorre apenas em Dev - para espelhar em prod deve-se usar 'publish')
   async deleteLanguage(sistema: string, language: string): Promise<void> {
     language = this.validateLanguage(language);
 
+    //? idioma base não pode ser deletado
     if (language === this.BASE_LANGUAGE) {
       throw new Error('Base language cannot be deleted');
     }
 
+    //? remove idioma
     await this.provider.deleteLanguage(sistema, language);
 
     //? invalida cache todo relacionado ao idioma no sistema
     Engine.cache.deleteByPrefix(`${'dev'}:${sistema}:${language}`);
+    Engine.availableLanguages['dev'][sistema] = [];
   }
+  //#endregion
 
-  //! busca status de chaves faltantes por idioma e namespace
-  async getMissingKeysStatus(env: Environment, sistema: string): Promise<Record<string, MissingKeysStatus>> {
-    const languages = await this.provider.listLanguages(env, sistema);
-
-    const namespaces = await this.provider.listNamespaces(env, sistema, this.BASE_LANGUAGE);
-
-    // carrega base uma vez por namespace
-    const baseCatalogs = new Map<string, Set<string>>();
-
-    for (const ns of namespaces) {
-      const baseData = await this.provider.load({
-        sistema,
-        language: this.BASE_LANGUAGE,
-        namespace: ns,
-        env,
-      });
-
-      baseCatalogs.set(ns, new Set(Object.keys(baseData)));
-    }
-
-    const result: Record<string, MissingKeysStatus> = {};
-
-    for (const lang of languages) {
-      if (lang === this.BASE_LANGUAGE) {
-        result[lang] = { total: 0, namespaces: {} };
-        continue;
-      }
-
-      let total = 0;
-      const nsStatus: Record<string, number> = {};
-
-      for (const ns of namespaces) {
-        const baseKeys = baseCatalogs.get(ns)!;
-
-        const data = await this.provider.load({
-          sistema,
-          language: lang,
-          namespace: ns,
-          env,
-        });
-
-        const currentKeys = new Set(Object.keys(data));
-
-        const missing = [...baseKeys].filter((k) => !currentKeys.has(k));
-
-        if (missing.length > 0) {
-          nsStatus[ns] = missing.length;
-          total += missing.length;
-        }
-      }
-
-      result[lang] = {
-        total,
-        namespaces: nsStatus,
-      };
-    }
-
-    return result;
-  }
-
+  //#region About Merge between Environments
+  /**********************************************/
+  /* About Merge between Environments           */
+  /**********************************************/
   //! publica mudanças de Dev para Prod
   async publishToProd(sistema: string): Promise<void> {
     await this.provider.publishEnvironment(sistema, 'dev', 'prod');
     Engine.cache.deleteByPrefix(`prod:${sistema}`);
   }
+  //#endregion
 
+  //#region Private Methods
   /*****************************************************/
   /* Metodos da Privados                               */
   /*****************************************************/
@@ -334,4 +337,25 @@ export class Engine {
       throw new BadRequestException('Language not supported by Intl');
     }
   }
+
+  private async getAvailableLanguages(env: Environment, sistema: string): Promise<string[]> {
+    if (!Engine.availableLanguages[env]) {
+      Engine.availableLanguages[env] = {};
+    }
+
+    if (!Engine.availableLanguages[env][sistema]) {
+      const languages = await this.provider.listLanguages(env, sistema);
+      Engine.availableLanguages[env][sistema] = languages;
+    }
+
+    return Engine.availableLanguages[env][sistema];
+  }
+
+  private async languageAvailableOrThow(env: Environment, sistema: string, language: string): Promise<void> {
+    const availableLanguages = await this.getAvailableLanguages(env, sistema);
+    if (!availableLanguages.includes(language)) {
+      throw new BadRequestException('Language does not exist');
+    }
+  }
+  //#endregion
 }

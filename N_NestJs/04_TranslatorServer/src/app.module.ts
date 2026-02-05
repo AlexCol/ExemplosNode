@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { CatalogModule } from './infra/catalog/catalog.module';
-import { GlobalErrorFilter } from './filters/globalError.filter';
 import { APP_FILTER } from '@nestjs/core';
+import { GlobalErrorFilter } from './filters/globalError.filter';
+import { CatalogModule } from './infra/catalog/catalog.module';
 
 @Module({
   imports: [CatalogModule],
