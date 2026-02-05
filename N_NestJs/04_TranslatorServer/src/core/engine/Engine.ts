@@ -59,7 +59,7 @@ export class Engine {
     await this.provider.saveKey(entry, key, key);
 
     //? invalida cache do base em dev
-    Engine.cache.deleteByPrefix(`${'dev'}:${sistema}:${this.BASE_LANGUAGE}:${namespace}`);
+    Engine.cache.deleteByPrefix(`${'dev'}`);
   }
 
   //! adiciona tradução para entrada base (a inclusão ocorre apenas em Dev - para espelhar em prod deve-se usar 'publish')
@@ -144,7 +144,7 @@ export class Engine {
     );
 
     //? invalida cache do idioma base em dev
-    Engine.cache.deleteByPrefix(`${'dev'}:${sistema}:${this.BASE_LANGUAGE}:${namespace}`);
+    Engine.cache.deleteByPrefix(`${'dev'}`);
   }
 
   //! lista namespaces existentes

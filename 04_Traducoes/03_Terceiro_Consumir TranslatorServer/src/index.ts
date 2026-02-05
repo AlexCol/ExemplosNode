@@ -12,7 +12,7 @@ async function bootstrap() {
     res.json({
       mensagem: dicionario[lang].usuarios['Bem-vindo, {{name}}'],
       com_formato: formatTranslation(dicionario[lang].usuarios['Bem-vindo, {{name}}'], { name: 'João' }),
-      chave_fallback: dicionario[lang].usuarios['Chave Usuario'],
+      chave_fallback: dicionario[lang].usuarios['Bem-vindo, {{name}}'],
     });
   });
 
