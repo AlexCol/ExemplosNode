@@ -1,10 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { FastifyAdapter } from '@nestjs/platform-fastify';
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, new FastifyAdapter());
+  const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
+
+  setCors(app);
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -17,3 +19,51 @@ async function bootstrap() {
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
+
+export default function setCors(app: NestFastifyApplication): void {
+  const isProduction = false;
+
+  app.enableCors({
+    origin: isProduction
+      ? ['https://meudominio.com']
+      : (origin, callback) => {
+          // Permite localhost e IPs da rede local
+          const allowedOrigins = [
+            'http://localhost:3000',
+            'http://localhost:3001',
+            'http://localhost:3002',
+            /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}(:\d+)?$/, // 192.168.x.x
+            /^http:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?$/, // 10.x.x.x
+            /^http:\/\/172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}(:\d+)?$/, // 172.16-31.x.x
+          ];
+
+          if (
+            !origin ||
+            allowedOrigins.some((allowed) => (typeof allowed === 'string' ? allowed === origin : allowed.test(origin)))
+          ) {
+            callback(null, true); // ✅ Primeiro arg: erro (null = sem erro), segundo: permitido (true)
+          } else {
+            callback(null, false); // ✅ Não permite, mas sem erro
+            // OU se quiser retornar erro:
+            // callback(new Error('Not allowed by CORS'), false);
+          }
+        },
+
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+
+    allowedHeaders: [
+      'Content-Type',
+      'Accept',
+      'Authorization',
+      'X-Requested-With',
+      'Accept-Language',
+      'Accept-Encoding',
+      'remember-me',
+      'Cache-Control',
+    ],
+
+    credentials: true,
+    optionsSuccessStatus: 200,
+    maxAge: 86400,
+  });
+}
