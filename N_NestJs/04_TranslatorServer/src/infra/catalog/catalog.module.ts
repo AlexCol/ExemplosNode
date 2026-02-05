@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { CatalogController } from './catalog.controller';
 import { CatalogService } from './catalog.service';
-import { Engine } from '@/core/translation/engine/Engine';
-import { FileSystemProvider } from '@/core/translation/providers/filesystem/FileSystemProvider';
+import { Engine } from '@/core/engine/Engine';
+import { FileSystemProvider } from '@/core/providers/filesystem/FileSystemProvider';
 
 @Module({
   controllers: [CatalogController],

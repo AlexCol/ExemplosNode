@@ -1,5 +1,5 @@
-import { Environment } from '@/core/translation/contracts/Types';
-import { Engine } from '@/core/translation/engine/Engine';
+import { Environment } from '@/core/contracts/Types';
+import { Engine } from '@/core/engine/Engine';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()

@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { CatalogService } from './catalog.service';
 import { CreateBaseEntryDto } from './dto/create-base-entry.dto';
 import { CreateTranslationDto } from './dto/create-transation.dto';
-import { Environment } from '@/core/translation/contracts/Types';
+import { Environment } from '@/core/contracts/Types';
 
 @Controller('catalog')
 export class CatalogController {
