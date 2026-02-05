@@ -77,10 +77,20 @@ export class BunnyStorageProvider implements Provider {
 
   async listLanguages(sistema: string): Promise<string[]> {
     const prefix = this.resolveSystemPrefix(sistema);
-
     const items = await BunnyStorageSDK.file.list(this.storageZone, prefix);
 
-    return items.filter((i) => i.isDirectory).map((i) => i.objectName);
+    const directories = items.filter((i) => i.isDirectory);
+
+    // Filtrar apenas pastas que têm conteúdo
+    const nonEmptyDirs = await Promise.all(
+      directories.map(async (dir) => {
+        const languagePrefix = `${prefix}/${dir.objectName}`;
+        const contents = await BunnyStorageSDK.file.list(this.storageZone, languagePrefix);
+        return contents.length > 0 ? dir.objectName : null;
+      }),
+    );
+
+    return nonEmptyDirs.filter((name) => name !== null) as string[];
   }
 
   async createLanguage(sistema: string, language: string): Promise<void> {
@@ -102,8 +112,20 @@ export class BunnyStorageProvider implements Provider {
     await BunnyStorageSDK.file.upload(this.storageZone, `${prefix}/.keep`, stream);
   }
 
-  //TODO
-  async deleteLanguage(sistema: string, language: string): Promise<void> {}
+  async deleteLanguage(sistema: string, language: string): Promise<void> {
+    const prefix = this.resolveLanguagePrefix(sistema, language);
+
+    const items = await BunnyStorageSDK.file.list(this.storageZone, prefix);
+
+    if (!items.length) {
+      throw new Error(`Language '${language}' does not exist`);
+    }
+
+    for (const item of items) {
+      await BunnyStorageSDK.file.remove(this.storageZone, `${prefix}/${item.objectName}`);
+    }
+    // A pasta vazia é automaticamente removida pelo Bunny
+  }
 
   async listNamespaces(sistema: string, language: string): Promise<string[]> {
     const prefix = this.resolveLanguagePrefix(sistema, language);
