@@ -1,8 +1,8 @@
 import * as BunnyStorageSDK from '@bunny.net/storage-sdk';
 import { Provider } from '../../contracts/Provider';
 import { CatalogEntry, Environment } from '../../contracts/Types';
-import { BadRequestException } from '@nestjs/common';
 import { ReadableStream } from 'stream/web';
+import { BadRequestException } from '@nestjs/common';
 
 export class BunnyStorageProvider implements Provider {
   private readonly storageZone: BunnyStorageSDK.StorageZone;
@@ -40,7 +40,9 @@ export class BunnyStorageProvider implements Provider {
     const data = await this.load(entry);
 
     if (key in data) {
-      throw new BadRequestException(`Key '${key}' already exists`);
+      if (data[key] === value) {
+        throw new BadRequestException(`Key '${key}' already has the same value`);
+      }
     }
 
     data[key] = value;

@@ -64,7 +64,9 @@ export class FileSystemProvider implements Provider {
     const data = await this.load(entry);
 
     if (key in data) {
-      throw new BadRequestException(`Key '${key}' already exists`);
+      if (data[key] === value) {
+        throw new BadRequestException(`Key '${key}' already has the same value`);
+      }
     }
 
     data[key] = value;

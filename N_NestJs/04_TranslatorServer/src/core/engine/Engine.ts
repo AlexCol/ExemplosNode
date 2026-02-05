@@ -74,6 +74,11 @@ export class Engine {
       throw new BadRequestException('Invalid key');
     }
 
+    const availableLanguages = await this.provider.listLanguages('dev', sistema);
+    if (!availableLanguages.includes(language)) {
+      throw new BadRequestException('Language does not exist');
+    }
+
     const baseEntry = {
       sistema,
       namespace,
