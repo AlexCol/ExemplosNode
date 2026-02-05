@@ -7,7 +7,6 @@ export class InMemoryCache {
 
   set(key: string, value: Record<string, any>) {
     this.cache.set(key, value);
-    this.clear();
   }
 
   delete(key: string) {

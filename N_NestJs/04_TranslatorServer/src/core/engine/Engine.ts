@@ -5,7 +5,7 @@ import { CatalogEntry, Environment } from '../contracts/Types';
 import { MissingKeysStatus } from './interface/MissingKeysStatus';
 
 export class Engine {
-  private cache = new InMemoryCache();
+  private static cache = new InMemoryCache();
   private readonly BASE_LANGUAGE = 'pt-BR';
 
   constructor(private readonly provider: Provider) {}
@@ -19,9 +19,9 @@ export class Engine {
   ): Promise<Record<string, any>> {
     language = this.validateLanguage(language);
 
-    const cacheKey = `${sistema}:${language}:${namespace}`;
+    const cacheKey = `${env}:${sistema}:${language}:${namespace}`;
 
-    const cached = this.cache.get(cacheKey);
+    const cached = Engine.cache.get(cacheKey);
     if (cached) {
       console.log('Cache hit for key:', cacheKey);
       return cached;
@@ -32,7 +32,7 @@ export class Engine {
 
     //? se for base, não faz merge
     if (language === this.BASE_LANGUAGE) {
-      this.cache.set(cacheKey, baseCatalog);
+      Engine.cache.set(cacheKey, baseCatalog);
       console.log('Cache miss for key:', cacheKey);
       return baseCatalog;
     }
@@ -42,7 +42,7 @@ export class Engine {
 
     const merged = { ...baseCatalog, ...translationCatalog };
 
-    this.cache.set(cacheKey, merged);
+    Engine.cache.set(cacheKey, merged);
     console.log('Cache miss for key:', cacheKey);
     return merged;
   }
@@ -58,8 +58,8 @@ export class Engine {
 
     await this.provider.saveKey(entry, key, key);
 
-    //? invalida cache do base
-    this.cache.delete(`${sistema}:${this.BASE_LANGUAGE}:${namespace}`);
+    //? invalida cache do base em dev
+    Engine.cache.deleteByPrefix(`${'dev'}:${sistema}:${this.BASE_LANGUAGE}:${namespace}`);
   }
 
   //! adiciona tradução para entrada base (a inclusão ocorre apenas em Dev - para espelhar em prod deve-se usar 'publish')
@@ -96,8 +96,8 @@ export class Engine {
 
     await this.provider.saveKey(translationEntry, key, value);
 
-    //? invalida cache desse idioma
-    this.cache.delete(`${sistema}:${language}:${namespace}`);
+    //? invalida cache desse idioma em dev
+    Engine.cache.deleteByPrefix(`${'dev'}:${sistema}:${language}:${namespace}`);
   }
 
   //! busca chaves que existem no base mas estão faltando na tradução
@@ -143,8 +143,8 @@ export class Engine {
         .map((lang) => this.provider.deleteKey({ sistema, namespace, language: lang, env: 'dev' }, key)),
     );
 
-    //? invalida cache globalmente
-    this.cache.clear();
+    //? invalida cache do idioma base em dev
+    Engine.cache.deleteByPrefix(`${'dev'}:${sistema}:${this.BASE_LANGUAGE}:${namespace}`);
   }
 
   //! lista namespaces existentes
@@ -168,7 +168,8 @@ export class Engine {
 
     await Promise.all(languages.map((language) => this.provider.createNamespace(sistema, language, namespace)));
 
-    this.cache.clear();
+    //? invalida cache todo relacionado ao sistema
+    Engine.cache.deleteByPrefix(`${'dev'}:${sistema}`);
   }
 
   //! remove um namespace do base e de todas as traduções (a exclusão ocorre apenas em Dev - para espelhar em prod deve-se usar 'publish')
@@ -180,8 +181,8 @@ export class Engine {
     const languages = await this.provider.listLanguages('dev', sistema);
     await Promise.all(languages.map((language) => this.provider.deleteNamespace(sistema, language, namespace)));
 
-    //? invalida tudo relacionado
-    this.cache.clear();
+    //? invalida cache todo relacionado ao sistema
+    Engine.cache.deleteByPrefix(`${'dev'}:${sistema}`);
   }
 
   //! lista os idiomas existentes
@@ -217,7 +218,8 @@ export class Engine {
 
     await Promise.all(namespaces.map((ns) => this.provider.createNamespace(sistema, language, ns)));
 
-    this.cache.clear();
+    //? invalida cache todo relacionado ao sistema
+    Engine.cache.deleteByPrefix(`${'dev'}:${sistema}`);
   }
 
   //! deleta um idioma (a exclusão ocorre apenas em Dev - para espelhar em prod deve-se usar 'publish')
@@ -230,8 +232,8 @@ export class Engine {
 
     await this.provider.deleteLanguage(sistema, language);
 
-    // invalida tudo desse idioma
-    this.cache.deleteByPrefix(`${sistema}:${language}:`);
+    //? invalida cache todo relacionado ao idioma no sistema
+    Engine.cache.deleteByPrefix(`${'dev'}:${sistema}:${language}`);
   }
 
   //! busca status de chaves faltantes por idioma e namespace
@@ -297,7 +299,7 @@ export class Engine {
   //! publica mudanças de Dev para Prod
   async publishToProd(sistema: string): Promise<void> {
     await this.provider.publishEnvironment(sistema, 'dev', 'prod');
-    this.cache.clear();
+    Engine.cache.deleteByPrefix(`prod:${sistema}`);
   }
 
   /*****************************************************/
