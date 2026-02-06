@@ -1,8 +1,8 @@
+import { ReadableStream } from 'stream/web';
 import * as BunnyStorageSDK from '@bunny.net/storage-sdk';
+import { BadRequestException } from '@nestjs/common';
 import { Provider } from '../../contracts/Provider';
 import { CatalogEntry, Environment } from '../../contracts/Types';
-import { ReadableStream } from 'stream/web';
-import { BadRequestException } from '@nestjs/common';
 
 export class BunnyStorageProvider implements Provider {
   private readonly storageZone: BunnyStorageSDK.StorageZone;
