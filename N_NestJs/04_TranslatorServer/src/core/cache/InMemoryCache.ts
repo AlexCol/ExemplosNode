@@ -21,6 +21,14 @@ export class InMemoryCache {
     }
   }
 
+  deleteBySuffix(suffix: string) {
+    for (const key of this.cache.keys()) {
+      if (key.endsWith(suffix)) {
+        this.cache.delete(key);
+      }
+    }
+  }
+
   clear() {
     this.cache.clear();
   }

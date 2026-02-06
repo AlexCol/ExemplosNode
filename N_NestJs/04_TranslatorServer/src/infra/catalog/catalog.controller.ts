@@ -54,6 +54,16 @@ export class CatalogController {
     return this.service.getMissingKeysStatus(env, sistema);
   }
 
+  @Post(':env/:sistema/:namespace/key/translations')
+  async getKeyTranslations(
+    @Param('env') env: Environment,
+    @Param('sistema') sistema: string,
+    @Param('namespace') namespace: string,
+    @Body() body: { key: string },
+  ) {
+    return await this.service.getKeyTranslations(env, sistema, namespace, body.key);
+  }
+
   /**********************************************/
   /* Setters                                    */
   /**********************************************/

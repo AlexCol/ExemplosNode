@@ -1,6 +1,6 @@
+import { Injectable } from '@nestjs/common';
 import { Environment } from '@/core/contracts/Types';
 import { Engine } from '@/core/engine/Engine';
-import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class CatalogService {
@@ -32,8 +32,12 @@ export class CatalogService {
     return await this.engine.listLanguages(env, sistema);
   }
 
-  getMissingKeysStatus(env: Environment, sistema: string) {
-    return this.engine.getMissingKeysStatus(env, sistema);
+  async getMissingKeysStatus(env: Environment, sistema: string) {
+    return await this.engine.getMissingKeysStatus(env, sistema);
+  }
+
+  async getKeyTranslations(env: Environment, sistema: string, namespace: string, key: string) {
+    return await this.engine.getKeyTranslations(env, sistema, namespace, key);
   }
 
   /**********************************************/
@@ -47,12 +51,12 @@ export class CatalogService {
     return await this.engine.addTranslation(sistema, namespace, lang, key, value);
   }
 
-  createNamespace(sistema: string, namespace: string) {
-    return this.engine.createNamespace(sistema, namespace);
+  async createNamespace(sistema: string, namespace: string) {
+    return await this.engine.createNamespace(sistema, namespace);
   }
 
-  createLanguage(sistema: string, language: string) {
-    return this.engine.createLanguage(sistema, language);
+  async createLanguage(sistema: string, language: string) {
+    return await this.engine.createLanguage(sistema, language);
   }
 
   /**********************************************/
@@ -66,7 +70,7 @@ export class CatalogService {
     return await this.engine.removeNamespace(sistema, namespace);
   }
 
-  deleteLanguage(sistema: string, language: string) {
-    return this.engine.deleteLanguage(sistema, language);
+  async deleteLanguage(sistema: string, language: string) {
+    return await this.engine.deleteLanguage(sistema, language);
   }
 }
