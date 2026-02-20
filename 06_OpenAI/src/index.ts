@@ -27,3 +27,27 @@ async function run() {
 }
 
 run();
+
+/*
+  const response = await client.responses.create({
+    model: 'gpt-4.1-mini',
+    input: [
+      {
+        role: 'system',
+        content: `
+          Você é um assistente especializado EXCLUSIVAMENTE no sistema ACME ERP.
+
+          REGRAS:
+          - Responda apenas sobre funcionalidades, APIs e regras do ACME ERP
+          - Se a pergunta não for sobre ACME ERP, responda:
+            "Não posso ajudar com esse assunto. Posso auxiliar apenas com o ACME ERP."
+          - Não improvise nem especule
+          `,
+      },
+      {
+        role: 'user',
+        content: 'Como posso resetar minha senha?',
+      },
+    ],
+  });
+*/
