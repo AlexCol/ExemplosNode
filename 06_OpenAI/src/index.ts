@@ -1,13 +1,22 @@
 import OpenAI from 'openai';
 
 const client = new OpenAI({
-  apiKey: 'mykey',
+  apiKey: '',
 });
 
 async function run() {
   const response = await client.responses.create({
     model: 'gpt-4.1-mini',
-    input: 'Explique o padrão Repository em poucas palavras',
+    input: [
+      {
+        role: 'system',
+        content: 'Você é um agente de suporte técnico. Responda as perguntas de forma clara e objetiva.',
+      },
+      {
+        role: 'user',
+        content: 'Como posso resetar minha senha?',
+      },
+    ],
   });
 
   const texts = response.output
